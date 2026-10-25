@@ -11,6 +11,12 @@ MP.config = {
   supabaseKey: '',
   /* true: new posts wait for your approval before everyone sees them. */
   galleryNeedsApproval: true,
+  /* Gilded mushrooms: a rare harvest that reveals a Shopify discount code.
+     Create this code in Shopify (Discounts) before going live. */
+  gildedCode: 'GILDED10',
+  gildedOffer: '10% off your next order',
+  gildedChance: 1 / 15,
+  gildedGuaranteeBy: 5, // the first gilded mushroom arrives by this block at the latest
 };
 
 /* Moshruums products offered in the cafe. Fill in the real product links. */
