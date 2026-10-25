@@ -51,7 +51,7 @@ const G = {
   glass: lg('mp-glass', [[0, '#FFFFFF', 0.55], [0.5, '#FFFFFF', 0.12], [1, '#FFFFFF', 0.4]], 1, 0),
   glaze: lg('mp-glaze', [[0, '#E6E2DA'], [0.35, '#FBFAF7'], [0.7, '#F2EFE9'], [1, '#D9D4CA']], 1, 0),
   saucer: lg('mp-saucer', [[0, '#FBFAF7'], [1, '#DAD5CC']]),
-  wall: lg('mp-wall', [[0, '#ECEBE7'], [1, '#DDDCD7']]),
+  wall: lg('mp-wall', [[0, '#F1EEE9'], [1, '#DCDCC8']]),
   walnut: lg('mp-walnut', [[0, '#7B573A'], [1, '#5A3E29']]),
   plateStone: rg('mp-plate-stone', [[0, '#57544F'], [0.8, '#43413D'], [1, '#2F2E2B']], 0.45, 0.4, 0.7),
   plateStoneWell: rg('mp-plate-stone-w', [[0, '#4D4A46'], [1, '#3D3B37']], 0.45, 0.4, 0.7),
@@ -65,6 +65,15 @@ const G = {
   bok: lg('mp-bok', [[0, '#4F7E3A'], [0.55, '#7FAA5A'], [1, '#EEF2DF']]),
   miso: lg('mp-miso', [[0, '#C27A35'], [1, '#8C4A1A']]),
   goldBadge: lg('mp-gold', [[0, '#F7E3A1'], [0.5, '#D9AE48'], [1, '#B48322']], 1, 1),
+  amber: lg('mp-amber', [[0, '#1E0F06'], [0.28, '#6A3F1E'], [0.6, '#3B200F'], [1, '#160B04']], 1, 0),
+  lid: lg('mp-lid', [[0, '#3A3A38'], [1, '#0E0E0D']]),
+  labelShade: lg('mp-label-shade', [[0, '#000', 0.2], [0.22, '#000', 0], [0.78, '#000', 0], [1, '#000', 0.22]], 1, 0),
+  wood: lg('mp-wood', [[0, '#D2A472'], [1, '#AE7C4C']]),
+  bowlOut: rg('mp-bowl-out', [[0, '#8E887A'], [0.85, '#6E695D'], [1, '#55514A']], 0.45, 0.4, 0.7),
+  bowlIn: rg('mp-bowl-in', [[0, '#5E5A52'], [0.7, '#4A4740'], [1, '#34322D']], 0.5, 0.45, 0.6),
+  cafe: lg('mp-cafe', [[0, '#2E251C'], [1, '#14100C']]),
+  light: rg('mp-light', [[0, '#FFE6B8', 0.3], [1, '#FFE6B8', 0]], 0.75, 0.15, 0.7),
+  vig: rg('mp-vig', [[0, '#000', 0], [0.6, '#000', 0], [1, '#000', 0.7]], 0.5, 0.5, 0.75),
 };
 const F = {
   seared: cm('mp-f-seared', '0.72 0.10 0 0 0  0.04 0.58 0.02 0 0  0 0.04 0.36 0 0  0 0 0 1 0'),
@@ -73,6 +82,7 @@ const F = {
   gild: cm('mp-f-gild', '0.20 0.36 0.06 0 0.40  0.16 0.30 0.05 0 0.27  0.05 0.10 0.02 0 0.04  0 0 0 1 0'),
 };
 defs.push('<filter id="mp-shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#1E1C18" flood-opacity=".24"/></filter>');
+defs.push('<filter id="mp-grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>');
 defs.push('<filter id="mp-soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="8"/></filter>');
 F.shadow = 'url(#mp-shadow)';
 F.soft = 'url(#mp-soft)';
@@ -333,12 +343,12 @@ const SLOT_POS = [[110, 196], [290, 196], [110, 396], [290, 396]];
 const SLOT_K = 0.6;
 function rack(slots, selected) {
   let s = '';
-  s += `<rect x="18" y="8" width="5" height="410" rx="2" fill="#3A3936"/><rect x="377" y="8" width="5" height="410" rx="2" fill="#3A3936"/>`;
+  s += `<rect x="18" y="8" width="5" height="410" rx="2" fill="#45452F"/><rect x="377" y="8" width="5" height="410" rx="2" fill="#45452F"/>`;
   [196, 396].forEach(y => {
     s += `<ellipse cx="200" cy="${y + 2}" rx="170" ry="6" fill="#000" opacity=".06"/>`;
-    s += `<rect x="16" y="${y}" width="368" height="5" rx="2" fill="#3A3936"/>`;
-    for (let x = 30; x < 380; x += 14) s += `<path d="M${x} ${y + 5} v5" stroke="#3A3936" stroke-width="1"/>`;
-    s += `<rect x="16" y="${y + 10}" width="368" height="2" rx="1" fill="#3A3936"/>`;
+    s += `<rect x="16" y="${y}" width="368" height="5" rx="2" fill="#45452F"/>`;
+    for (let x = 30; x < 380; x += 14) s += `<path d="M${x} ${y + 5} v5" stroke="#45452F" stroke-width="1"/>`;
+    s += `<rect x="16" y="${y + 10}" width="368" height="2" rx="1" fill="#45452F"/>`;
   });
   slots.forEach((p, i) => {
     const [x, y] = SLOT_POS[i];
@@ -434,7 +444,7 @@ const PIECES = {
 };
 const MUSH_PIECES = ['blue', 'pink', 'golden', 'lions', 'pioppino', 'king', 'pearl', 'maitake', 'nameko'];
 const PIECE_R = { blue: 46, pink: 46, golden: 38, lions: 40, king: 58, pearl: 58, pioppino: 40, maitake: 44, nameko: 30 };
-function pieceR(t) { return PIECE_R[t] || (MP.ingredients[t] && MP.ingredients[t].r) || 30; }
+function pieceR(t) { return PIECE_R[t] || (Object.prototype.hasOwnProperty.call(MP.ingredients, t) && MP.ingredients[t].r) || 30; }
 
 function surface(id, w = 400, h = 400) {
   const R = rng(77);
@@ -473,18 +483,21 @@ function plate(id) {
   } else if (id === 'celadon') {
     s += `<circle cx="200" cy="200" r="158" fill="${G.plateCel}"/><circle cx="200" cy="200" r="136" fill="${G.plateCelWell}"/>`;
     s += `<circle cx="200" cy="200" r="157" fill="none" stroke="#E2EAE1" stroke-width="2" opacity=".8"/>`;
+  } else if (id === 'deepbowl') {
+    s += `<circle cx="200" cy="200" r="156" fill="${G.bowlOut}"/><circle cx="200" cy="200" r="140" fill="${G.bowlIn}"/>`;
+    s += `<circle cx="200" cy="200" r="155" fill="none" stroke="#7A7568" stroke-width="2" opacity=".6"/><path d="M90 120 A140 140 0 0 1 200 60" stroke="#fff" stroke-width="4" fill="none" opacity=".18" stroke-linecap="round"/>`;
   } else {
     s += `<circle cx="200" cy="200" r="162" fill="${G.platePorc}"/><circle cx="200" cy="200" r="108" fill="#FBFBF9"/>`;
     s += `<circle cx="200" cy="200" r="108" fill="none" stroke="#E2E0DA" stroke-width="2.5"/>`;
   }
   return s;
 }
-/* A plated dish. items: [{t,x,y,r,s}]. sel: index of the selected item. */
-function dish(comp, sel = -1) {
+/* A plated dish. items: [{t,x,y,r,s}]. sel: index of the selected item. bare: leave out the surface. */
+function dish(comp, sel = -1, bare = false) {
   const method = MP.methods[comp.method] ? comp.method : 'raw';
-  let s = surface(MP.surfaces[comp.surface] ? comp.surface : 'stone') + plate(MP.plates[comp.plate] ? comp.plate : 'stone');
+  let s = (bare ? '' : surface(MP.surfaces[comp.surface] ? comp.surface : 'stone')) + plate(MP.plates[comp.plate] ? comp.plate : 'stone');
   (comp.items || []).slice(0, 40).forEach((it, i) => {
-    const draw = PIECES[it.t];
+    const draw = MP.pieceDraw(it.t);
     if (!draw) return;
     const cook = MUSH_PIECES.includes(it.t) && method !== 'raw' ? ` filter="${F[method]}"` : '';
     const x = clamp(+it.x || 200, 0, 400), y = clamp(+it.y || 200, 0, 400), rot = Math.round(+it.r || 0), sc = clamp(+it.s || 1, 0.4, 2.2);
@@ -496,14 +509,15 @@ function dish(comp, sel = -1) {
   return s;
 }
 function pieceThumb(t) {
-  const r = pieceR(t);
-  return `<svg viewBox="${-r - 8} ${-r - 8} ${2 * r + 16} ${2 * r + 16}" aria-hidden="true">${PIECES[t] ? PIECES[t]() : ''}</svg>`;
+  const r = pieceR(t), draw = MP.pieceDraw(t);
+  return `<svg viewBox="${-r - 8} ${-r - 8} ${2 * r + 16} ${2 * r + 16}" aria-hidden="true">${draw ? draw() : ''}</svg>`;
 }
 
-/* ---------- Cafe ---------- */
+/* ---------- Cafe: everything is served in clear glass ---------- */
 const GLASSES = {
-  glass: { top: 118, bot: 340, wt: 62, wb: 48 },
-  rocks: { top: 218, bot: 340, wt: 80, wb: 70 },
+  mug: { top: 186, bot: 338, wt: 70, wb: 64, fill: 20, handle: true },
+  glass: { top: 118, bot: 340, wt: 62, wb: 48, fill: 30 },
+  rocks: { top: 218, bot: 340, wt: 80, wb: 70, fill: 24 },
 };
 function milkTint(comp) {
   const m = MP.milks[comp.milk];
@@ -522,31 +536,52 @@ function drinkColors(comp) {
   let base = b.color;
   (comp.mush || []).forEach(id => { const col = powderColor(id); if (col) base = mix(base, col, 0.1); });
   const milk = milkTint(comp);
-  const layered = !!(milk && comp.temp === 'iced' && b.layer && comp.cup !== 'ceramic');
+  const layered = !!(milk && comp.temp === 'iced' && b.layer);
   const blended = milk ? mix(base, milk, b.latte) : base;
   return { base, milk, layered, blended, b };
+}
+/* Moshruum's jar: amber glass, black lid, pastel label. Base of the jar at 0,0. */
+function jar(p) {
+  const words = p.name.split(' ');
+  const l1 = words.length > 1 ? words.slice(0, Math.ceil(words.length / 2)).join(' ') : p.name;
+  const l2 = words.length > 1 ? words.slice(Math.ceil(words.length / 2)).join(' ') : '';
+  const hand = `font-family="'Gochi Hand', 'Comic Sans MS', cursive"`;
+  const sans = `font-family="'Hanken Grotesk', Arial, sans-serif"`;
+  let s = `<rect x="-31" y="-78" width="62" height="78" rx="8" fill="${G.amber}"/>`;
+  s += `<rect x="-28" y="-84" width="56" height="8" rx="2" fill="#2A170C"/>`;
+  s += `<rect x="-32" y="-100" width="64" height="18" rx="3" fill="${G.lid}"/><path d="M-30 -96 H30" stroke="#fff" stroke-opacity=".12" stroke-width="1.4"/>`;
+  s += `<rect x="-31" y="-70" width="62" height="50" fill="${p.label}"/><rect x="-31" y="-70" width="62" height="50" fill="${G.labelShade}"/>`;
+  s += `<text x="0" y="-61" text-anchor="middle" ${sans} font-weight="600" font-size="3.6" letter-spacing=".9" fill="#2A2A26">MOSHRUUM'S</text>`;
+  s += `<text x="0" y="${l2 ? -49 : -43}" text-anchor="middle" ${hand} font-size="11" fill="#151513">${esc(l1)}</text>`;
+  if (l2) s += `<text x="0" y="-38" text-anchor="middle" ${hand} font-size="11" fill="#151513">${esc(l2)}</text>`;
+  s += `<text x="0" y="-29" text-anchor="middle" ${sans} font-weight="700" font-size="2.6" letter-spacing=".4" fill="#2A2A26">${esc(p.tagline)}</text>`;
+  s += `<text x="0" y="-24.5" text-anchor="middle" ${sans} font-size="2.4" letter-spacing=".3" fill="#55554E">${esc(p.sub)}</text>`;
+  s += `<path d="M-31 -66 q5 1 3 5 q-2 4 3 5" stroke="#151513" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M31 -28 q-4 -1 -3 3 q1 4 -3 4" stroke="#151513" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+  s += `<rect x="-26" y="-76" width="4" height="72" rx="2" fill="#fff" opacity=".16"/>`;
+  return s;
+}
+function woodBlock(w) {
+  return `<path d="M${-w / 2 + 6} -7 L${w / 2 - 6} -7 L${w / 2} 0 L${-w / 2} 0Z" fill="#DDB585"/>` +
+    `<rect x="${-w / 2}" y="0" width="${w}" height="24" fill="${G.wood}"/>` +
+    `<path d="M${-w / 2 + 6} 6 Q0 9 ${w / 2 - 6} 5 M${-w / 2 + 4} 13 Q0 10 ${w / 2 - 4} 14 M${-w / 2 + 8} 19 Q0 22 ${w / 2 - 8} 19" stroke="#9C6E42" stroke-width=".8" fill="none" opacity=".6"/>`;
 }
 function prop(id, x) {
   const p = MP.products.find(q => q.id === id);
   const sp = MP.species[id];
-  if (p) {
-    const words = p.name.split(' ');
-    return `<g transform="translate(${x} 332)"><ellipse cx="0" cy="0" rx="28" ry="4" fill="#000" opacity=".15"/>` +
-      `<rect x="-24" y="-66" width="48" height="66" rx="6" fill="#2D2C29"/><rect x="-22" y="-76" width="44" height="12" rx="3" fill="#47453F"/>` +
-      `<rect x="-24" y="-50" width="48" height="34" fill="#F4F1EA"/><circle cx="0" cy="-44" r="2.6" fill="${p.color}"/>` +
-      `<text x="0" y="-33" text-anchor="middle" font-family="'Instrument Serif', Georgia, serif" font-size="8.5" fill="#2D2C29">${esc(words[0])}</text>` +
-      `<text x="0" y="-23" text-anchor="middle" font-family="'Instrument Serif', Georgia, serif" font-size="8.5" fill="#2D2C29">${esc(words.slice(1).join(' '))}</text>` +
-      `<text x="0" y="-8" text-anchor="middle" font-family="'Hanken Grotesk', system-ui, sans-serif" font-size="4.6" letter-spacing="1" fill="#C9C5BC">MOSHRUUMS</text></g>`;
+  let s = `<g transform="translate(${x} 302)"><ellipse cx="0" cy="25" rx="50" ry="5" fill="#000" opacity=".15"/>${woodBlock(84)}<g transform="translate(0 -5)">`;
+  if (p) s += jar(p);
+  else if (sp) {
+    s += `<path d="M-22 0 L-24 -58 L-17 -66 L17 -66 L24 -58 L22 0Z" fill="#CDAE82"/><path d="M-17 -66 L-13 -72 L13 -72 L17 -66Z" fill="#B99A6E"/>` +
+      `<rect x="-16" y="-46" width="32" height="22" fill="#FBF8F1"/><text x="0" y="-32" text-anchor="middle" font-family="'Instrument Serif', Georgia, serif" font-size="7.5" fill="#2D2C29">${esc(sp.name)}</text>`;
   }
-  if (sp) {
-    return `<g transform="translate(${x} 332)"><ellipse cx="0" cy="0" rx="24" ry="4" fill="#000" opacity=".15"/>` +
-      `<path d="M-20 0 L-22 -52 L-16 -60 L16 -60 L22 -52 L20 0Z" fill="#CDAE82"/><path d="M-16 -60 L-12 -66 L12 -66 L16 -60Z" fill="#B99A6E"/>` +
-      `<rect x="-15" y="-40" width="30" height="20" fill="#FBF8F1"/><text x="0" y="-27" text-anchor="middle" font-family="'Instrument Serif', Georgia, serif" font-size="7.5" fill="#2D2C29">${esc(sp.name)}</text></g>`;
-  }
-  return '';
+  return s + '</g></g>';
 }
-function latteArt(cx, cy, col) {
-  return `<g transform="translate(${cx} ${cy}) scale(.82 .22)"><path d="M0 34 C-44 2 -48 -36 -22 -42 C-9 -44 0 -34 0 -25 C0 -34 9 -44 22 -42 C48 -36 44 2 0 34Z" fill="${col}"/><path d="M0 34 L0 -18" stroke="${col}" stroke-width="3"/></g>`;
+function productThumb(id) {
+  const p = MP.products.find(q => q.id === id);
+  return p ? `<svg viewBox="-40 -106 80 112" aria-hidden="true">${jar(p)}</svg>` : '';
+}
+function latteArt(cx, cy, col, sx = 0.7, sy = 0.2) {
+  return `<g transform="translate(${cx} ${cy}) scale(${sx} ${sy})"><path d="M0 34 C-44 2 -48 -36 -22 -42 C-9 -44 0 -34 0 -25 C0 -34 9 -44 22 -42 C48 -36 44 2 0 34Z" fill="${col}"/><path d="M0 34 L0 -18" stroke="${col}" stroke-width="3"/></g>`;
 }
 function dust(comp, cx, cy, rx, ry, seed) {
   const R = rng(seed);
@@ -568,28 +603,6 @@ function dust(comp, cx, cy, rx, ry, seed) {
 function steam(x, y) {
   return [-18, 0, 18].map((dx, i) => `<path class="steam" style="animation-delay:-${i * 0.9}s" d="M${x + dx} ${y} c-8 -12 8 -20 0 -32 c-8 -12 8 -20 0 -32" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".75"/>`).join('');
 }
-function ceramic(comp) {
-  const c = drinkColors(comp);
-  const fin = comp.finish || [];
-  let top = c.milk ? c.blended : c.b.top;
-  if (fin.includes('foam') && c.milk) top = mix(c.milk, '#FFFFFF', 0.3);
-  let s = `<ellipse cx="200" cy="340" rx="122" ry="21" fill="#000" opacity=".12" filter="${F.soft}"/>`;
-  s += `<ellipse cx="200" cy="336" rx="118" ry="20" fill="${G.saucer}"/><ellipse cx="200" cy="333" rx="72" ry="11" fill="#E4E0D7"/>`;
-  s += `<path d="M274 236 C318 230 320 292 266 294" stroke="#E3DED5" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M274 236 C318 230 320 292 266 294" stroke="#F7F5F0" stroke-width="6" fill="none" stroke-linecap="round"/>`;
-  s += `<path d="M122 214 C124 290 150 330 200 332 C250 330 276 290 278 214Z" fill="${G.glaze}"/>`;
-  s += `<ellipse cx="200" cy="214" rx="78" ry="17" fill="#F6F4EF" stroke="#DDD8CF"/>`;
-  s += `<ellipse cx="200" cy="217" rx="70" ry="13.5" fill="${top}"/>`;
-  if (!c.milk && (comp.base === 'espresso')) s += `<ellipse cx="200" cy="217" rx="62" ry="11" fill="#B07A45" opacity=".55"/>`;
-  if (fin.includes('art') && c.milk && comp.temp !== 'iced') {
-    s += `<ellipse cx="200" cy="217" rx="70" ry="13.5" fill="${mix(c.base, c.milk, 0.35)}"/>`;
-    s += latteArt(200, 218, mix(c.milk, '#FFFFFF', 0.35));
-  }
-  if (comp.temp === 'iced') s += `<rect x="168" y="208" width="22" height="14" rx="4" fill="#fff" opacity=".55" transform="rotate(-12 179 215)"/><rect x="206" y="211" width="20" height="12" rx="4" fill="#fff" opacity=".5" transform="rotate(10 216 217)"/>`;
-  s += dust(comp, 200, 217, 70, 13.5, 4);
-  s += `<path d="M136 236 C140 280 158 310 186 322" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".5"/>`;
-  if (comp.temp !== 'iced') s += steam(200, 194);
-  return s;
-}
 function glassDrink(comp) {
   const g = GLASSES[comp.cup] || GLASSES.glass;
   const c = drinkColors(comp);
@@ -597,8 +610,12 @@ function glassDrink(comp) {
   const id = nextId('mpclip');
   const L = 200 - g.wt, Rr = 200 + g.wt, bl = 200 - g.wb, br = 200 + g.wb;
   const inner = `M${L + 5} ${g.top} L${bl + 5} ${g.bot - 10} Q${bl + 6} ${g.bot - 4} ${bl + 12} ${g.bot - 4} L${br - 12} ${g.bot - 4} Q${br - 6} ${g.bot - 4} ${br - 5} ${g.bot - 10} L${Rr - 5} ${g.top}Z`;
-  const fillY = g.top + (comp.cup === 'rocks' ? 24 : 30);
+  const outline = `M${L} ${g.top} L${bl} ${g.bot - 8} Q${bl + 2} ${g.bot} ${bl + 12} ${g.bot} L${br - 12} ${g.bot} Q${br - 2} ${g.bot} ${br} ${g.bot - 8} L${Rr} ${g.top}`;
+  const fillY = g.top + g.fill;
   const bottom = g.bot - 4, H = bottom - fillY;
+  const hotMilk = c.milk && comp.temp !== 'iced';
+  const foam = c.milk && (fin.includes('foam') || hotMilk);
+  const foamCol = c.milk ? mix(c.milk, '#FFFFFF', 0.35) : '#fff';
   let s = `<defs><clipPath id="${id}"><path d="${inner}"/></clipPath>`;
   let liquid = '';
   if (c.layered) {
@@ -611,7 +628,8 @@ function glassDrink(comp) {
   }
   s += '</defs>';
   s += `<ellipse cx="200" cy="${g.bot + 2}" rx="${g.wb + 26}" ry="8" fill="#000" opacity=".14" filter="${F.soft}"/>`;
-  s += `<path d="M${L} ${g.top} L${bl} ${g.bot - 8} Q${bl + 2} ${g.bot} ${bl + 12} ${g.bot} L${br - 12} ${g.bot} Q${br - 2} ${g.bot} ${br} ${g.bot - 8} L${Rr} ${g.top}Z" fill="#fff" fill-opacity=".18"/>`;
+  if (g.handle) s += `<path d="M${Rr - 3} ${g.top + 26} C${Rr + 44} ${g.top + 22} ${Rr + 44} ${g.bot - 44} ${br - 2} ${g.bot - 36}" stroke="#fff" stroke-opacity=".55" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M${Rr - 3} ${g.top + 26} C${Rr + 44} ${g.top + 22} ${Rr + 44} ${g.bot - 44} ${br - 2} ${g.bot - 36}" stroke="#9E9B93" stroke-opacity=".5" stroke-width="1" fill="none"/>`;
+  s += `<path d="${outline}Z" fill="#fff" fill-opacity=".18"/>`;
   s += `<g clip-path="url(#${id})">${liquid}`;
   if (comp.sweet === 'brown') {
     const R = rng(6);
@@ -626,20 +644,23 @@ function glassDrink(comp) {
   }
   if (comp.temp === 'iced') {
     const R = rng(8);
-    for (let i = 0; i < 5; i++) { const x = L + 14 + R() * (g.wt * 2 - 48), y = fillY - 6 + R() * Math.min(70, H * 0.5), rr = Math.round((R() - 0.5) * 50); s += `<rect x="${r1(x)}" y="${r1(y)}" width="30" height="28" rx="6" transform="rotate(${rr} ${r1(x + 15)} ${r1(y + 14)})" fill="#fff" fill-opacity=".32" stroke="#fff" stroke-opacity=".7" stroke-width="1.2"/>`; }
+    for (let i = 0; i < 5; i++) { const x = L + 14 + R() * (g.wt * 2 - 48), y = fillY + 4 + R() * Math.min(60, H * 0.45), rr = Math.round((R() - 0.5) * 50); s += `<rect x="${r1(x)}" y="${r1(y)}" width="28" height="26" rx="6" transform="rotate(${rr} ${r1(x + 14)} ${r1(y + 13)})" fill="#fff" fill-opacity=".32" stroke="#fff" stroke-opacity=".7" stroke-width="1.2"/>`; }
   }
-  let topY = fillY;
-  if ((fin.includes('foam') || (c.milk && comp.temp !== 'iced')) && c.milk) {
-    s += `<path d="M0 ${fillY + 26} V${fillY} q12 -4 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 V${fillY + 26}Z" fill="${mix(c.milk, '#FFFFFF', 0.35)}"/>`;
-    topY = fillY;
-  }
+  if (foam) s += `<path d="M0 ${fillY + 24} V${fillY} q12 -4 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 V${fillY + 24}Z" fill="${foamCol}"/>`;
   s += `</g>`;
-  s += `<ellipse cx="200" cy="${topY}" rx="${g.wt - 6}" ry="5" fill="#fff" opacity=".18"/>`;
-  s += dust(comp, 200, topY, g.wt - 8, 5, 9);
+  /* the surface, seen from slightly above */
+  const rx = g.wt - 6 - (g.wt - g.wb) * (g.fill / (g.bot - g.top)), ry = Math.max(5, rx * 0.12);
+  const topCol = foam ? foamCol : c.layered ? c.base : c.milk ? c.blended : c.b.top;
+  s += `<ellipse cx="200" cy="${fillY}" rx="${r1(rx)}" ry="${r1(ry)}" fill="${topCol}"/>`;
+  if (fin.includes('art') && hotMilk) {
+    s += `<ellipse cx="200" cy="${fillY}" rx="${r1(rx)}" ry="${r1(ry)}" fill="${mix(c.base, c.milk, 0.35)}"/>`;
+    s += latteArt(200, fillY + 1, foamCol, rx / 60, ry / 40);
+  }
+  s += dust(comp, 200, fillY, rx, ry, 9);
   if (comp.temp === 'iced' && comp.cup === 'glass') s += `<path d="M222 ${g.bot - 20} L262 ${g.top - 34}" stroke="#2F2E2B" stroke-width="7" stroke-linecap="round"/>`;
-  s += `<path d="M${L} ${g.top} L${bl} ${g.bot - 8} Q${bl + 2} ${g.bot} ${bl + 12} ${g.bot} L${br - 12} ${g.bot} Q${br - 2} ${g.bot} ${br} ${g.bot - 8} L${Rr} ${g.top}" fill="none" stroke="#fff" stroke-width="2.4" stroke-opacity=".9"/>`;
-  s += `<path d="M${L} ${g.top} L${bl} ${g.bot - 8} Q${bl + 2} ${g.bot} ${bl + 12} ${g.bot} L${br - 12} ${g.bot} Q${br - 2} ${g.bot} ${br} ${g.bot - 8} L${Rr} ${g.top}" fill="none" stroke="#9E9B93" stroke-width=".8" stroke-opacity=".6"/>`;
-  s += `<ellipse cx="200" cy="${g.top}" rx="${g.wt}" ry="6" fill="none" stroke="#fff" stroke-width="2" stroke-opacity=".9"/>`;
+  s += `<path d="${outline}" fill="none" stroke="#fff" stroke-width="2.4" stroke-opacity=".9"/>`;
+  s += `<path d="${outline}" fill="none" stroke="#9E9B93" stroke-width=".8" stroke-opacity=".6"/>`;
+  s += `<ellipse cx="200" cy="${g.top}" rx="${g.wt}" ry="${r1(Math.max(5, g.wt * 0.1))}" fill="none" stroke="#fff" stroke-width="2" stroke-opacity=".9"/>`;
   s += `<path d="M${L + 14} ${g.top + 16} L${bl + 14} ${g.bot - 22}" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".45"/>`;
   s += `<rect x="${bl + 4}" y="${g.bot - 8}" width="${g.wb * 2 - 8}" height="8" rx="3" fill="#fff" opacity=".35"/>`;
   if (comp.temp !== 'iced') s += steam(200, g.top - 18);
@@ -651,12 +672,34 @@ function counter(id) {
   s += `<rect y="324" width="400" height="3" fill="#000" opacity=".06"/>`;
   return s;
 }
-function drink(comp) {
-  let s = counter(MP.surfaces[comp.surface] ? comp.surface : 'stone');
+function drink(comp, bare = false) {
+  let s = bare ? '' : counter(MP.surfaces[comp.surface] ? comp.surface : 'stone');
   const mush = (comp.mush || []).slice(0, 2);
-  if (mush[0]) s += prop(mush[0], 74);
-  if (mush[1]) s += prop(mush[1], 352);
-  s += comp.cup === 'ceramic' ? ceramic(comp) : glassDrink(comp);
+  if (mush[0]) s += prop(mush[0], 72);
+  if (mush[1]) s += prop(mush[1], 344);
+  return s + glassDrink(comp);
+}
+
+/* ---------- Cinematic cover (640 x 400) for premium recipes ---------- */
+function cover(kind, comp) {
+  const R = rng(kind === 'dish' ? (comp.items || []).length * 7 + 3 : 11);
+  let s = '';
+  if (kind === 'dish') {
+    s += `<g transform="scale(1.6)">${surface(MP.surfaces[comp.surface] ? comp.surface : 'stone', 400, 250)}</g>`;
+    s += `<rect width="640" height="400" fill="#0B0A08" opacity=".42"/>`;
+    s += `<g transform="translate(26 318) rotate(-14)" filter="${F.shadow}"><rect x="-90" y="-46" width="190" height="120" rx="3" fill="#E7E1D5"/><path d="M-90 -14 H100 M-30 -46 V74" stroke="#D2CABA" stroke-width="2"/><rect x="-90" y="-46" width="190" height="120" rx="3" fill="none" stroke="#CFC6B4"/></g>`;
+    const garn = Array.from(new Set((comp.items || []).map(i => i.t))).filter(t => ['herb', 'spice'].includes((MP.ingredients[t] || {}).cat)).slice(0, 2);
+    garn.forEach((t, i) => { const d = MP.pieceDraw(t); if (d) s += `<g transform="translate(${150 + i * 60} ${340 - i * 30}) rotate(${Math.round(R() * 90)}) scale(.8)" filter="${F.shadow}">${d()}</g>`; });
+    s += `<g transform="translate(250 -46) scale(1.14)">${dish(comp, -1, true)}</g>`;
+  } else {
+    s += `<rect width="640" height="400" fill="url(#mp-cafe)"/>`;
+    for (let i = 0; i < 14; i++) s += `<circle cx="${r1(R() * 300)}" cy="${r1(20 + R() * 220)}" r="${r1(10 + R() * 26)}" fill="${R() > 0.5 ? '#FFCB7A' : '#F7E2B8'}" opacity="${r1(0.12 + R() * 0.3)}" filter="${F.soft}"/>`;
+    s += `<g transform="translate(0 316) scale(1.6 1)">${surface(MP.surfaces[comp.surface] ? comp.surface : 'walnut', 400, 84)}</g><rect y="316" width="640" height="84" fill="#0B0A08" opacity=".38"/>`;
+    s += `<ellipse cx="430" cy="200" rx="120" ry="150" fill="#FFE7BD" opacity=".16" filter="${F.soft}"/>`;
+    s += `<g transform="translate(230 -12)">${drink(comp, true)}</g>`;
+  }
+  s += `<rect width="640" height="400" fill="url(#mp-light)"/><rect width="640" height="400" fill="url(#mp-vig)"/>`;
+  s += `<rect width="640" height="400" filter="url(#mp-grain)" opacity=".1"/>`;
   return s;
 }
 
@@ -666,6 +709,6 @@ function speciesThumb(id, gilded) {
   const box = MP.species[id] && MP.species[id].jar ? '-70 -130 140 140' : '-95 -182 190 190';
   return `<svg viewBox="${box}" aria-hidden="true"><g${gilded ? ` filter="${F.gild}"` : ''}>${cluster(id, 3)}</g></svg>`;
 }
-MP.art = { DEFS, G, F, surface, r1, clamp, esc, rng, mix, stageOf, stageProg, rack, slot, cluster, sparkles, dish, drink, pieceThumb, pieceR, speciesThumb, svg, SLOT_POS, SLOT_K, MUSH_PIECES, drinkColors };
+MP.art = { DEFS, G, F, surface, blobPath, dome, PIECES, r1, clamp, esc, rng, mix, stageOf, stageProg, rack, slot, cluster, sparkles, dish, drink, cover, productThumb, pieceThumb, pieceR, speciesThumb, svg, SLOT_POS, SLOT_K, MUSH_PIECES, drinkColors };
 
 })(window.MP = window.MP || {});

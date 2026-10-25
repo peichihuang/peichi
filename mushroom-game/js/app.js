@@ -25,7 +25,7 @@ const save = () => MP.save(state);
 const ui = {
   view: 'grow', growSel: 0, growTab: 'care', group: 'culinary', pick: 'blue', pickName: randomName(), confirmCompost: false,
   kSub: 'create', kTab: 'add', kCat: 'mush', kSel: -1, kHist: [],
-  cSub: 'create', cStep: 'cup', filter: { dish: 'all', drink: 'all' },
+  cSub: 'create', cStep: 'cup', filter: { dish: 'all', drink: 'all' }, q: { dish: '', drink: '' }, cat: { dish: 'all', drink: 'all' }, kQuery: '',
 };
 
 function randomName() { return MP.names[Math.floor(Math.random() * MP.names.length)]; }
@@ -404,10 +404,11 @@ $('rackSvg').addEventListener('keydown', e => {
 });
 
 /* ---------- Kitchen ---------- */
-const LAYER = { miso: 0, cream: 0, toast: 1, rice: 1, noodles: 1, bokchoy: 1 };
-const layerOf = t => (t in LAYER ? LAYER[t] : MP.ingredients[t] && MP.ingredients[t].cat === 'garnish' ? 3 : 2);
+const layerOf = MP.layerOf;
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const ING = t => (hasOwn(MP.ingredients, t) ? MP.ingredients[t] : null);
 function kPush() { ui.kHist.push(JSON.stringify(state.kitchen)); if (ui.kHist.length > 60) ui.kHist.shift(); }
-function itemName(t) { return MP.species[t] ? MP.species[t].name : MP.ingredients[t] ? MP.ingredients[t].name : t; }
+function itemName(t) { return hasOwn(MP.species, t) ? MP.species[t].name : ING(t) ? ING(t).name : t; }
 function renderDish() {
   $('dishSvg').innerHTML = A.dish(state.kitchen, ui.kSel);
   $('kSurfaceName').textContent = MP.surfaces[state.kitchen.surface].name;
@@ -431,16 +432,9 @@ function renderKitchenTools() {
   let html = tabs([['add', 'Add', 'ingredients'], ['adjust', 'Adjust', 'cooking and layout'], ['plate', 'Plate', 'and surface']], ui.kTab, 'data-ktab');
   html += '<div class="pane">';
   if (ui.kTab === 'add') {
-    html += `<div class="seg">${[['mush', 'Mushrooms', 'from your pantry'], ['base', 'Ingredients', 'the dish'], ['garnish', 'Garnish', 'sauce and finish']].map(([k, b, s]) => `<button data-kcat="${k}" aria-pressed="${k === ui.kCat}"><b>${b}</b><small>${s}</small></button>`).join('')}</div>`;
-    if (ui.kCat === 'mush') {
-      html += `<div class="cards scroll">${MP.culinary.map(id => {
-        const has = !!state.pantry[id];
-        return `<button class="card${has ? '' : ' locked'}" data-add="${id}" ${has ? '' : 'disabled'} aria-label="${has ? 'Add ' : ''}${esc(sp(id).name)}${has ? '' : ', grow it first'}">${has ? '<span class="plus">+</span>' : ''}<span class="art">${A.pieceThumb(id)}</span><b>${esc(sp(id).name)}</b><small>${has ? state.pantry[id].g + ' g in pantry' : 'grow it first'}</small></button>`;
-      }).join('')}</div>`;
-    } else {
-      const ids = Object.keys(MP.ingredients).filter(k => MP.ingredients[k].cat === ui.kCat);
-      html += `<div class="cards scroll">${ids.map(id => `<button class="card" data-add="${id}" aria-label="Add ${esc(MP.ingredients[id].name)}"><span class="plus">+</span><span class="art">${A.pieceThumb(id)}</span><b>${esc(MP.ingredients[id].name)}</b><small>${esc(MP.ingredients[id].line)}</small></button>`).join('')}</div>`;
-    }
+    html += `<input class="input search" id="kSearch" type="search" placeholder="Search ${Object.keys(MP.ingredients).length + MP.culinary.length} ingredients" aria-label="Search ingredients" value="${esc(ui.kQuery || '')}" autocomplete="off">`;
+    html += `<div class="chips scroll-row" role="group" aria-label="Ingredient categories">${MP.ingCats.map(([k, l]) => `<button data-kcat="${k}" aria-pressed="${k === ui.kCat && !ui.kQuery}">${l}</button>`).join('')}</div>`;
+    html += `<div id="kCards">${kitchenCards()}</div>`;
   } else if (ui.kTab === 'adjust') {
     html += `<div><p class="label">Cooking</p></div><div class="cards">${Object.keys(MP.methods).map(k => `<button class="card" data-method="${k}" aria-pressed="${state.kitchen.method === k}"><b>${MP.methods[k].name}</b><small>${MP.methods[k].line}</small></button>`).join('')}</div>`;
     const it = state.kitchen.items[ui.kSel];
@@ -466,13 +460,38 @@ function renderKitchenTools() {
   html += '</div>';
   el.innerHTML = html;
   el.querySelectorAll('[data-ktab]').forEach(b => b.onclick = () => { ui.kTab = b.dataset.ktab; SFX.tap(); renderKitchenTools(); });
-  el.querySelectorAll('[data-kcat]').forEach(b => b.onclick = () => { ui.kCat = b.dataset.kcat; SFX.tap(); renderKitchenTools(); });
-  el.querySelectorAll('[data-add]').forEach(b => b.onclick = () => addItem(b.dataset.add));
+  el.querySelectorAll('[data-kcat]').forEach(b => b.onclick = () => { ui.kCat = b.dataset.kcat; ui.kQuery = ''; SFX.tap(); renderKitchenTools(); });
+  bindKitchenCards();
+  const ks = $('kSearch');
+  if (ks) ks.oninput = () => {
+    ui.kQuery = ks.value;
+    $('kCards').innerHTML = kitchenCards();
+    el.querySelectorAll('[data-kcat]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kcat === ui.kCat && !ui.kQuery)));
+    bindKitchenCards();
+  };
   el.querySelectorAll('[data-method]').forEach(b => b.onclick = () => { kPush(); state.kitchen.method = b.dataset.method; SFX.tap(); save(); renderDish(); renderKitchenTools(); });
   el.querySelectorAll('[data-plate]').forEach(b => b.onclick = () => { kPush(); state.kitchen.plate = b.dataset.plate; SFX.tap(); save(); renderDish(); renderKitchenTools(); });
   el.querySelectorAll('[data-surface]').forEach(b => b.onclick = () => { kPush(); state.kitchen.surface = b.dataset.surface; SFX.tap(); save(); renderDish(); renderKitchenTools(); });
   el.querySelectorAll('[data-op]').forEach(b => b.onclick = () => itemOp(b.dataset.op));
 }
+function kitchenCards() {
+  const q = (ui.kQuery || '').trim().toLowerCase();
+  const mushCard = id => {
+    const has = !!state.pantry[id];
+    return `<button class="card${has ? '' : ' locked'}" data-add="${id}" ${has ? '' : 'disabled'} aria-label="${has ? 'Add ' : ''}${esc(sp(id).name)}${has ? '' : ', grow it first'}">${has ? '<span class="plus">+</span>' : ''}<span class="art">${A.pieceThumb(id)}</span><b>${esc(sp(id).name)}</b><small>${has ? state.pantry[id].g + ' g in pantry' : 'grow it first'}</small></button>`;
+  };
+  const ingCard = id => `<button class="card" data-add="${id}" aria-label="Add ${esc(ING(id).name)}"><span class="plus">+</span><span class="art">${A.pieceThumb(id)}</span><b>${esc(ING(id).name)}</b><small>${esc(ING(id).line)}</small></button>`;
+  let cards;
+  if (q) {
+    const m = MP.culinary.filter(id => sp(id).name.toLowerCase().includes(q) || 'mushroom'.includes(q));
+    const i = Object.keys(MP.ingredients).filter(id => (ING(id).name + ' ' + ING(id).line + ' ' + (MP.ingCats.find(c => c[0] === ING(id).cat) || ['', ''])[1]).toLowerCase().includes(q));
+    cards = m.map(mushCard).concat(i.map(ingCard));
+    if (!cards.length) return `<p class="muted small">Nothing matches "${esc(ui.kQuery)}". Try a category instead.</p>`;
+  } else if (ui.kCat === 'mush') cards = MP.culinary.map(mushCard);
+  else cards = Object.keys(MP.ingredients).filter(id => ING(id).cat === ui.kCat).map(ingCard);
+  return `<div class="cards scroll tall">${cards.join('')}</div>`;
+}
+function bindKitchenCards() { document.querySelectorAll('#kCards [data-add]').forEach(b => b.onclick = () => addItem(b.dataset.add)); }
 function itemOp(op) {
   const items = state.kitchen.items, i = ui.kSel, it = items[i];
   if (!it) return;
@@ -569,8 +588,8 @@ function renderDrink() {
   $('drinkName').textContent = drinkName(state.cafe);
 }
 function finishOk(k, c) {
-  if (k === 'art') return c.cup === 'ceramic' && c.temp === 'hot' && MP.milks[c.milk].color;
-  if (k === 'pearls') return c.cup !== 'ceramic';
+  if (k === 'art') return c.cup === 'mug' && c.temp === 'hot' && !!MP.milks[c.milk].color;
+  if (k === 'pearls') return c.cup !== 'mug';
   if (k === 'foam') return !!MP.milks[c.milk].color;
   return true;
 }
@@ -588,14 +607,14 @@ function renderCafeTools() {
   const sw = col => `<span class="swatch" style="background:${col}"></span>`;
   if (ui.cStep === 'cup') {
     html += `<div class="seg"><button data-temp="hot" aria-pressed="${c.temp === 'hot'}"><b>Hot</b><small>steamed</small></button><button data-temp="iced" aria-pressed="${c.temp === 'iced'}"><b>Iced</b><small>over ice</small></button></div>`;
-    html += `<div class="cards">${Object.keys(MP.cups).map(k => opt('data-cup', k, c.cup === k, MP.cups[k].name, MP.cups[k].line, `<span class="art">${A.svg(A.drink({ cup: k, temp: c.temp, base: c.base, milk: c.milk, mush: [], sweet: 'none', finish: [], surface: c.surface }), '90 90 220 260')}</span>`)).join('')}</div>`;
+    html += `<div class="cards">${Object.keys(MP.cups).map(k => opt('data-cup', k, c.cup === k, MP.cups[k].name, MP.cups[k].line, `<span class="art">${A.svg(A.drink({ cup: k, temp: c.temp, base: c.base, milk: c.milk, mush: [], sweet: 'none', finish: [], surface: c.surface }), '80 100 240 250')}</span>`)).join('')}</div>`;
   } else if (ui.cStep === 'base') {
     html += `<div class="cards">${Object.keys(MP.bases).map(k => opt('data-base', k, c.base === k, MP.bases[k].name, '', sw(MP.bases[k].color))).join('')}</div>`;
   } else if (ui.cStep === 'milk') {
     html += `<div class="cards">${Object.keys(MP.milks).map(k => opt('data-milk', k, c.milk === k, MP.milks[k].name, '', sw(MP.milks[k].color || 'transparent'))).join('')}</div>`;
   } else if (ui.cStep === 'mush') {
     html += `<p class="small muted">Choose up to two. Tap again to remove.</p><p class="label">Moshruums blends</p>`;
-    html += `<div class="cards">${MP.products.map(p => `<button class="card" data-mush="${p.id}" aria-pressed="${c.mush.includes(p.id)}">${sw(p.color)}<b>${esc(p.name)}</b><small>${esc(p.line)}</small></button>`).join('')}</div>`;
+    html += `<div class="cards">${MP.products.map(p => `<button class="card" data-mush="${p.id}" aria-pressed="${c.mush.includes(p.id)}"><span class="art">${A.productThumb(p.id)}</span><b>${esc(p.name)}</b><small>${esc(p.line)}</small></button>`).join('')}</div>`;
     html += `<div class="row" style="flex-wrap:wrap;gap:14px">${MP.products.map(p => `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener" style="text-decoration:underline">Shop ${esc(p.name)} ↗</a>`).join('')}</div>`;
     const sel = c.mush.map(id => MP.products.find(p => p.id === id)).filter(Boolean)[0];
     if (sel) html += `<p class="small muted"><b style="color:var(--ink)">${esc(sel.name)}.</b> ${esc(sel.note)}</p>`;
@@ -608,7 +627,7 @@ function renderCafeTools() {
   } else {
     html += `<p class="small muted">Pick as many as you like.</p><div class="cards">${Object.keys(MP.finishes).map(k => {
       const ok = finishOk(k, c);
-      return opt('data-finish', k, c.finish.includes(k), MP.finishes[k].name, ok ? MP.finishes[k].line : (k === 'art' ? 'needs a hot milk drink in a cup' : k === 'pearls' ? 'needs a glass' : 'needs milk'), '', !ok);
+      return opt('data-finish', k, c.finish.includes(k), MP.finishes[k].name, ok ? MP.finishes[k].line : (k === 'art' ? 'needs a hot milk drink in the glass mug' : k === 'pearls' ? 'needs a tall or short glass' : 'needs milk'), '', !ok);
     }).join('')}</div>`;
   }
   const idx = STEPS.findIndex(s => s[0] === ui.cStep);
@@ -637,7 +656,7 @@ function renderCafeTools() {
   const nx = $('cNext'); if (nx) nx.onclick = () => { ui.cStep = STEPS[idx + 1][0]; SFX.tap(); renderCafeTools(); };
   const dn = $('cDone'); if (dn) dn.onclick = () => $('cFinish').click();
 }
-$('cReset').onclick = () => { state.cafe = { cup: 'ceramic', temp: 'hot', base: 'espresso', milk: 'oat', mush: [], sweet: 'none', finish: [], surface: state.cafe.surface }; ui.cStep = 'cup'; save(); renderDrink(); renderCafeTools(); };
+$('cReset').onclick = () => { state.cafe = { cup: 'mug', temp: 'hot', base: 'espresso', milk: 'oat', mush: [], sweet: 'none', finish: [], surface: state.cafe.surface }; ui.cStep = 'cup'; save(); renderDrink(); renderCafeTools(); };
 $('cSurface').onclick = () => { const k = Object.keys(MP.surfaces); state.cafe.surface = k[(k.indexOf(state.cafe.surface) + 1) % k.length]; SFX.tap(); save(); renderDrink(); };
 $('cFinish').onclick = () => finishSheet('drink', clone(state.cafe));
 
@@ -647,21 +666,65 @@ function dishIngredients(comp) {
   const seen = new Set(), out = [];
   (comp.items || []).forEach(it => {
     if (seen.has(it.t)) return; seen.add(it.t);
-    if (MP.species[it.t]) out.push(MP.species[it.t].name + ' mushrooms');
-    else if (MP.ingredients[it.t]) out.push(`${MP.ingredients[it.t].name}, ${MP.ingredients[it.t].line}`);
+    if (hasOwn(MP.species, it.t)) out.push(MP.species[it.t].name + ' mushrooms');
+    else if (ING(it.t)) out.push(`${ING(it.t).name}, ${ING(it.t).line}`);
   });
   return out;
 }
 function dishSteps(comp) {
   const ts = Array.from(new Set((comp.items || []).map(i => i.t)));
-  const mush = ts.filter(t => MP.species[t]).map(t => MP.species[t].name.toLowerCase());
-  const base = ts.filter(t => MP.ingredients[t] && MP.ingredients[t].cat === 'base').map(t => MP.ingredients[t].name.toLowerCase());
-  const garn = ts.filter(t => MP.ingredients[t] && MP.ingredients[t].cat === 'garnish').map(t => MP.ingredients[t].name.toLowerCase());
+  const mush = ts.filter(t => hasOwn(MP.species, t)).map(t => MP.species[t].name.toLowerCase());
+  const top = t => ING(t) && layerOf(t) === 3;
+  const base = ts.filter(t => ING(t) && !top(t)).map(t => ING(t).name.toLowerCase());
+  const garn = ts.filter(top).map(t => ING(t).name.toLowerCase());
   const steps = [];
   if (mush.length) steps.push(`${MP.methods[comp.method].verb.replace('the mushrooms', 'the ' + list(mush))}.`);
   if (base.length) steps.push(`Prepare the ${list(base)}.`);
   steps.push(`Arrange everything on the ${MP.plates[comp.plate].name.toLowerCase()}${garn.length ? `, then finish with ${list(garn)}` : ''}.`);
   return steps.join(' ');
+}
+/* Diet comes from the ingredients: mushrooms and plants alone make a dish vegan. */
+function dishDiet(comp) {
+  const marks = new Set();
+  (comp.items || []).forEach(it => { const g = ING(it.t); if (g) g.diet.forEach(d => marks.add(d)); });
+  const tags = [];
+  if (!marks.size) tags.push('vegan');
+  if (!marks.has('meat') && !marks.has('seafood')) tags.push('vegetarian');
+  if (marks.has('seafood')) tags.push('seafood');
+  if (marks.has('meat')) tags.push('meat');
+  return tags;
+}
+function suggestCourses(comp) {
+  const ts = new Set((comp.items || []).map(i => i.t));
+  const any = list => list.some(t => ts.has(t));
+  const out = [];
+  if (any(['broth'])) out.push('soup');
+  if (any(['noodles', 'spaghetti', 'udon', 'soba', 'ricenoodles', 'penne', 'gnocchi'])) out.push('noodles');
+  if (any(['rice', 'brownrice', 'quinoa', 'couscous'])) out.push('rice');
+  if (any(['toast', 'baguette', 'tortilla'])) out.push('toast');
+  if (any(['egg', 'friedegg', 'oats']) && !out.includes('soup')) out.push('breakfast');
+  if (any(['lettuce', 'arugula', 'spinach', 'kale']) && !out.length) out.push('salad');
+  return out;
+}
+const DRINK_TAGS = { coffee: 'Coffee', matcha: 'Matcha', tea: 'Tea', milktea: 'Milk tea', smoothie: 'Smoothie', cacao: 'Cacao', hot: 'Hot', iced: 'Iced', dairyfree: 'Dairy-free', vegan: 'Vegan' };
+function drinkTags(c) {
+  const t = [];
+  if (['espresso', 'coldbrew'].includes(c.base)) t.push('coffee');
+  if (c.base === 'matcha') t.push('matcha');
+  if (['hojicha', 'blacktea', 'chai'].includes(c.base)) { t.push('tea'); if (MP.milks[c.milk].color) t.push('milktea'); }
+  if (MP.bases[c.base].smoothie) t.push('smoothie');
+  if (c.base === 'cacao') t.push('cacao');
+  t.push(c.temp === 'iced' ? 'iced' : 'hot');
+  if (c.milk !== 'whole') { t.push('dairyfree'); if (c.sweet !== 'honey') t.push('vegan'); }
+  (c.mush || []).forEach(id => { if (MP.products.some(p => p.id === id)) t.push(id); });
+  return t;
+}
+const DIET_LABEL = { vegan: 'Vegan', vegetarian: 'Vegetarian', seafood: 'Seafood', meat: 'Meat' };
+function tagLabel(t) { return DIET_LABEL[t] || MP.courses[t] || DRINK_TAGS[t] || (MP.products.find(p => p.id === t) || {}).name || t; }
+function entryTags(e) { return e.kind === 'dish' ? dishDiet(e.comp).concat(e.tags || []) : drinkTags(e.comp); }
+function haystack(e) {
+  const ingr = e.kind === 'dish' ? dishIngredients(e.comp) : drinkIngredients(e.comp);
+  return [e.title, e.author, e.notes, e.kind === 'dish' ? 'dish food recipe' : 'drink cafe café', ingr.join(' '), entryTags(e).map(tagLabel).join(' '), e.featured ? 'premium' : ''].join(' ').toLowerCase();
 }
 function drinkIngredients(c) {
   const out = [MP.cups[c.cup].name + (c.temp === 'iced' ? ', iced' : ', hot'), MP.bases[c.base].name];
@@ -697,15 +760,18 @@ function finishSheet(kind, comp) {
         <p class="label">${kind === 'dish' ? 'Your dish' : 'Your drink'}</p>
         <div class="field"><label for="fTitle">Name</label><input class="input" id="fTitle" maxlength="60" value="${esc(title)}"></div>
         <div class="field"><label for="fAuthor">Your name, optional</label><input class="input" id="fAuthor" maxlength="30" autocomplete="nickname" value="${esc(state.author || '')}"></div>
+        ${kind === 'dish' ? `<div class="field"><label>Category</label><div class="chips" id="fCourses">${Object.keys(MP.courses).map(k => `<button type="button" data-course="${k}" aria-pressed="${suggestCourses(comp).includes(k)}">${MP.courses[k]}</button>`).join('')}</div><p class="small muted">${dishDiet(comp).map(tagLabel).join(' · ') || 'Contains meat or seafood'}, worked out from the ingredients.</p></div>` : `<p class="small muted">${drinkTags(comp).map(tagLabel).join(' · ')}</p>`}
         <div class="field"><label for="fNotes">How to make it</label><textarea class="input" id="fNotes" maxlength="1200">${esc(kind === 'dish' ? dishSteps(comp) : drinkSteps(comp))}</textarea></div>
       </div>
     </div>
     <div class="actions"><button class="b2 dark" id="fShare"><b>Share</b><small>to the ${where}</small></button><button class="b2 outline" id="fPic"><b>Save picture</b><small>PNG card</small></button><button class="b2 ghost" id="fBack"><b>Keep editing</b><small>back to the ${kind === 'dish' ? 'plate' : 'bar'}</small></button></div>`, true);
   $('fBack').onclick = closeModal;
+  document.querySelectorAll('#fCourses [data-course]').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')));
   $('fPic').onclick = () => savePicture(render(kind, comp), $('fTitle').value || title, $('fAuthor').value ? 'by ' + $('fAuthor').value : where, kind);
   $('fShare').onclick = async () => {
     const btn = $('fShare'); btn.disabled = true;
-    const entry = { id: uid(), kind, title: $('fTitle').value.trim() || title, author: $('fAuthor').value.trim(), notes: $('fNotes').value.trim(), comp, created: Date.now() };
+    const entry = { id: uid(), kind, title: $('fTitle').value.trim() || title, author: $('fAuthor').value.trim(), notes: $('fNotes').value.trim(), comp, created: Date.now(),
+      tags: Array.from(document.querySelectorAll('#fCourses [data-course][aria-pressed="true"]')).map(b => b.dataset.course) };
     state.author = entry.author;
     state.mine.unshift(entry); state.mine = state.mine.slice(0, 60); save();
     let status = 'local';
@@ -713,53 +779,96 @@ function finishSheet(kind, comp) {
     closeModal();
     const msg = { shared: `Shared to the ${where}.`, pending: `Sent to the ${where}. It appears for everyone once the farm approves it.`, local: `Saved to your ${where} on this device.`, error: `Couldn't share right now, so it's saved on this device.` }[status];
     toast(msg, 5000);
-    if (kind === 'dish') { ui.kSub = 'book'; ui.filter.dish = 'mine'; } else { ui.cSub = 'book'; ui.filter.drink = 'mine'; }
+    ui.q[kind] = ''; ui.cat[kind] = 'all'; ui.filter[kind] = 'mine';
+    if (kind === 'dish') ui.kSub = 'book'; else ui.cSub = 'book';
     renderView();
   };
 }
 function suggestDishName(comp) {
   const ts = Array.from(new Set(comp.items.map(i => i.t)));
   const m = ts.find(t => MP.species[t]);
-  const base = ts.find(t => ['toast', 'rice', 'noodles'].includes(t));
+  const what = { toast: 'on Sourdough', baguette: 'Crostini', tortilla: 'Tacos', rice: 'Rice Bowl', brownrice: 'Grain Bowl', quinoa: 'Grain Bowl', noodles: 'Noodles', udon: 'Udon', soba: 'Soba', ricenoodles: 'Noodle Bowl', spaghetti: 'Spaghetti', penne: 'Pasta', gnocchi: 'Gnocchi', broth: 'Soup', polenta: 'with Polenta', lettuce: 'Salad', arugula: 'Salad' };
+  const base = ts.find(t => what[t]);
   const method = { raw: 'Fresh', seared: 'Seared', roasted: 'Roasted', braised: 'Glazed' }[comp.method];
-  if (!m) return 'Farm plate';
-  const what = { toast: 'on Sourdough', rice: 'Rice Bowl', noodles: 'Noodles' }[base];
-  return `${method} ${MP.species[m].name}${what ? (base === 'toast' ? ' ' + what : ' ' + what) : ''}`;
+  if (!m) return base ? what[base].replace(/^on |^with /, '') : 'Farm Plate';
+  return `${method} ${MP.species[m].name}${base ? ' ' + what[base] : ''}`;
 }
 
 /* ---------- Books (galleries) ---------- */
+const DISH_FILTERS = [['all', 'All'], ['vegan', 'Vegan'], ['vegetarian', 'Vegetarian'], ['seafood', 'Seafood'], ['meat', 'Meat']].concat(Object.keys(MP.courses).map(k => [k, MP.courses[k]]));
+const DRINK_FILTERS = [['all', 'All']].concat(Object.keys(DRINK_TAGS).map(k => [k, DRINK_TAGS[k]]), MP.products.map(p => [p.id, p.name]));
+function coverHtml(e) {
+  return e.cover ? `<img src="${esc(e.cover)}" alt="" loading="lazy">` : A.svg(A.cover(e.kind, e.comp), '0 0 640 400', 'preserveAspectRatio="xMidYMid slice" aria-hidden="true"');
+}
+function byLine(e, mineIds) { return (e.farm ? 'From the farm' : e.author ? 'by ' + esc(e.author) : 'Anonymous') + (mineIds && mineIds.has(e.id) ? ' · yours' : ''); }
+function bookResults(kind, all, mineIds) {
+  const f = ui.filter[kind], cat = ui.cat[kind];
+  const toks = (ui.q[kind] || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const shown = all.filter(e =>
+    (f === 'all' || (f === 'farm' && e.farm) || (f === 'community' && !e.farm && !mineIds.has(e.id)) || (f === 'mine' && mineIds.has(e.id))) &&
+    (cat === 'all' || entryTags(e).includes(cat)) &&
+    (!toks.length || (h => toks.every(t => h.includes(t)))(haystack(e))));
+  if (!shown.length) {
+    if (toks.length || cat !== 'all') return `<p class="empty">No ${kind === 'dish' ? 'recipes' : 'drinks'} match yet. Try another search, or make one and share it.</p>`;
+    return `<p class="empty">${f === 'mine' ? `Nothing here yet. Finish a ${kind === 'dish' ? 'dish' : 'drink'} and share it to see it here.` : f === 'community' ? (MP.gallery.mode === 'local' ? 'Community sharing turns on once the gallery is connected to the website.' : 'No shared recipes yet. Be the first.') : 'Nothing here yet.'}</p>`;
+  }
+  return `<p class="small muted">${shown.length} ${kind === 'dish' ? (shown.length === 1 ? 'recipe' : 'recipes') : (shown.length === 1 ? 'drink' : 'drinks')}</p><div class="gallery">${shown.map(e => `<button class="entry" data-entry="${esc(e.id)}">${A.svg(render(kind, e.comp))}<span class="entry-text"><b>${esc(e.title)}</b><small>${byLine(e, mineIds)}</small><span class="tags">${entryTags(e).slice(0, 3).map(t => `<i>${esc(tagLabel(t))}</i>`).join('')}</span></span></button>`).join('')}</div>`;
+}
 function renderBook(kind) {
   const el = $(kind === 'dish' ? 'kitchenBook' : 'cafeBook');
-  const f = ui.filter[kind];
   const all = MP.gallery.list(kind, state.mine);
   const mineIds = new Set(state.mine.map(m => m.id));
-  const shown = all.filter(e => f === 'all' || (f === 'farm' && e.farm) || (f === 'community' && !e.farm && !mineIds.has(e.id)) || (f === 'mine' && mineIds.has(e.id)));
   const name = kind === 'dish' ? 'Recipe Book' : 'Café Menu';
+  const premium = all.filter(e => e.featured).sort((a, b) => {
+    const ia = MP.premium.findIndex(p => p.id === a.id), ib = MP.premium.findIndex(p => p.id === b.id);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || b.created - a.created;
+  });
+  const filters = kind === 'dish' ? DISH_FILTERS : DRINK_FILTERS;
   el.innerHTML = `
-    <div class="book-head"><div><p class="label">${kind === 'dish' ? 'Cooking recipes' : 'Barista recipes'}</p><h2>${name}</h2></div>
-      <div class="chips">${[['all', 'All'], ['farm', 'From the farm'], ['community', 'Community'], ['mine', 'Mine']].map(([k, l]) => `<button data-f="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div></div>
-    ${shown.length ? `<div class="gallery">${shown.map(e => `<button class="entry" data-entry="${esc(e.id)}">${A.svg(render(kind, e.comp))}<span class="entry-text"><b>${esc(e.title)}</b><small>${e.farm ? 'From the farm' : e.author ? 'by ' + esc(e.author) : 'Anonymous'}${mineIds.has(e.id) ? ' · yours' : ''}</small></span></button>`).join('')}</div>`
-      : `<p class="empty">${f === 'mine' ? `Nothing here yet. Finish a ${kind === 'dish' ? 'dish' : 'drink'} and share it to see it here.` : f === 'community' ? (MP.gallery.mode === 'local' ? 'Community sharing turns on once the gallery is connected to the website.' : 'No shared recipes yet. Be the first.') : 'Nothing here yet.'}</p>`}`;
+    <div class="book-head"><div><p class="label">${kind === 'dish' ? 'Cooking recipes' : 'Barista recipes'}</p><h2>${name}</h2></div></div>
+    ${premium.length ? `<section class="premium" aria-label="Premium ${kind === 'dish' ? 'recipes' : 'drinks'}">
+      <div class="premium-head"><p class="label">Premium</p><p class="muted small">Hand-picked by the Moshruums farm.</p></div>
+      <div class="premium-grid">${premium.map((e, i) => `<button class="pcard${i > 0 && i === premium.length - 1 && premium.length % 2 === 0 ? ' wide' : ''}" data-entry="${esc(e.id)}">${coverHtml(e)}<span class="pcard-text"><small>Premium · ${byLine(e)}</small><b>${esc(e.title)}</b></span></button>`).join('')}</div>
+    </section>` : ''}
+    <div class="finder">
+      <div class="search-row"><input class="input search" id="bookSearch-${kind}" type="search" placeholder="${kind === 'dish' ? 'Search recipes, ingredients, vegan, seafood…' : 'Search drinks, coffee, matcha, oat…'}" aria-label="Search the ${name}" value="${esc(ui.q[kind])}" autocomplete="off">
+        <div class="chips">${[['all', 'All'], ['farm', 'Farm'], ['community', 'Community'], ['mine', 'Mine']].map(([k, l]) => `<button data-f="${k}" aria-pressed="${ui.filter[kind] === k}">${l}</button>`).join('')}</div></div>
+      <div class="chips scroll-row" role="group" aria-label="Categories">${filters.map(([k, l]) => `<button data-cat="${k}" aria-pressed="${ui.cat[kind] === k}">${esc(l)}</button>`).join('')}</div>
+    </div>
+    <div id="bookResults-${kind}">${bookResults(kind, all, mineIds)}</div>`;
+  const bindEntries = () => el.querySelectorAll('[data-entry]').forEach(b => b.onclick = () => { const e = all.find(x => x.id === b.dataset.entry); if (e) openEntry(e); });
   el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { ui.filter[kind] = b.dataset.f; SFX.tap(); renderBook(kind); });
-  el.querySelectorAll('[data-entry]').forEach(b => b.onclick = () => { const e = all.find(x => x.id === b.dataset.entry); if (e) openEntry(e); });
+  el.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { ui.cat[kind] = b.dataset.cat; SFX.tap(); renderBook(kind); });
+  const si = $('bookSearch-' + kind);
+  si.oninput = () => { ui.q[kind] = si.value; $('bookResults-' + kind).innerHTML = bookResults(kind, all, mineIds); bindEntries(); };
+  bindEntries();
   $(kind === 'dish' ? 'kBookCount' : 'cBookCount').textContent = `${all.length} ${kind === 'dish' ? 'recipes' : 'drinks'}`;
 }
 function openEntry(e) {
   const ingr = e.kind === 'dish' ? dishIngredients(e.comp).concat(MP.methods[e.comp.method] ? [MP.methods[e.comp.method].name + ' (' + MP.methods[e.comp.method].line + ')'] : []) : drinkIngredients(e.comp);
+  const canPick = MP.gallery.mode === 'artifact' && MP.gallery.owner;
   openModal(`
+    ${e.featured ? `<div class="cover">${coverHtml(e)}</div>` : ''}
     <div class="sheet-split">
       <div class="preview">${A.svg(render(e.kind, e.comp))}</div>
       <div style="display:grid;gap:12px;align-content:start">
-        <p class="label">${e.farm ? 'From the farm' : e.author ? 'by ' + esc(e.author) : 'Community'}</p>
+        <p class="label">${e.featured ? 'Premium · ' : ''}${e.farm ? 'From the farm' : e.author ? 'by ' + esc(e.author) : 'Community'}</p>
         <h2 id="modalTitle">${esc(e.title)}</h2>
+        <div class="tags">${entryTags(e).map(t => `<i>${esc(tagLabel(t))}</i>`).join('')}</div>
         <div><p class="label">You'll need</p><ul class="small">${ingr.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>
         ${e.notes ? `<div><p class="label">How to make it</p><p class="small" style="white-space:pre-line">${esc(e.notes)}</p></div>` : ''}
-        ${e.kind === 'drink' ? e.comp.mush.filter(id => MP.products.find(p => p.id === id)).map(id => { const p = MP.products.find(x => x.id === id); return `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener" style="text-decoration:underline">Shop ${esc(p.name)} ↗</a>`; }).join('') : ''}
+        ${e.kind === 'drink' ? e.comp.mush.filter(id => MP.products.find(p => p.id === id)).map(id => { const p = MP.products.find(x => x.id === id); return `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener" style="text-decoration:underline">Shop ${esc(p.full || p.name)} ↗</a>`; }).join('') : ''}
       </div>
     </div>
-    <div class="actions"><button class="b2 dark" id="eMake"><b>Recreate it</b><small>open in the ${e.kind === 'dish' ? 'kitchen' : 'café'}</small></button><button class="b2 outline" id="ePic"><b>Save picture</b><small>PNG card</small></button><button class="b2 ghost" id="eClose"><b>Close</b><small>back to the list</small></button></div>`, true);
+    <div class="actions"><button class="b2 dark" id="eMake"><b>Recreate it</b><small>open in the ${e.kind === 'dish' ? 'kitchen' : 'café'}</small></button><button class="b2 outline" id="ePic"><b>Save picture</b><small>PNG card</small></button>${canPick ? `<button class="b2 outline" id="ePick"><b>${e.featured ? 'Remove from Premium' : 'Add to Premium'}</b><small>only you see this</small></button>` : ''}<button class="b2 ghost" id="eClose"><b>Close</b><small>back to the list</small></button></div>`, true);
   $('eClose').onclick = closeModal;
   $('ePic').onclick = () => savePicture(render(e.kind, e.comp), e.title, e.farm ? 'From the Moshruums farm' : e.author ? 'by ' + e.author : '', e.kind);
+  const pk = $('ePick');
+  if (pk) pk.onclick = async () => {
+    pk.disabled = true;
+    try { await MP.gallery.setPremium(e.id, !e.featured); toast(e.featured ? 'Removed from Premium.' : 'Added to Premium.'); closeModal(); }
+    catch (err) { pk.disabled = false; toast("Couldn't change Premium right now."); }
+  };
   $('eMake').onclick = () => {
     closeModal();
     if (e.kind === 'dish') { kPush(); state.kitchen = clone(e.comp); ui.kSel = -1; ui.kSub = 'create'; }

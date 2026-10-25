@@ -17,7 +17,7 @@ function blank() {
     sound: true,
     intro: true,
     kitchen: JSON.parse(JSON.stringify(MP.farmRecipes[0].comp)), // starts with a sample plate from the welcome box
-    cafe: { cup: 'ceramic', temp: 'hot', base: 'espresso', milk: 'oat', mush: ['morning'], sweet: 'none', finish: ['art'], surface: 'walnut' },
+    cafe: { cup: 'mug', temp: 'hot', base: 'espresso', milk: 'oat', mush: ['morning'], sweet: 'none', finish: ['art'], surface: 'walnut' },
     mine: [],
   };
 }
@@ -44,6 +44,7 @@ MP.load = function () {
         const b = blank();
         const out = Object.assign(b, s);
         out.slots = [0, 1, 2, 3].map(i => (s.slots && s.slots[i]) || null);
+        if (!MP.cups[out.cafe.cup]) out.cafe.cup = 'mug'; // the ceramic cup was retired: all drinks are in glass now
         return out;
       }
     }
@@ -79,7 +80,7 @@ function normComp(kind, c) {
   const arr = (a, ok) => (Array.isArray(a) ? a.filter(x => typeof x === 'string' && ok(x)) : []);
   const isMush = x => MP.products.some(p => p.id === x) || (has(MP.species, x) && !!MP.species[x].powder);
   return {
-    cup: has(MP.cups, c.cup) ? c.cup : 'ceramic',
+    cup: has(MP.cups, c.cup) ? c.cup : 'mug',
     temp: c.temp === 'iced' ? 'iced' : 'hot',
     base: has(MP.bases, c.base) ? c.base : 'espresso',
     milk: has(MP.milks, c.milk) ? c.milk : 'none',
@@ -89,9 +90,17 @@ function normComp(kind, c) {
     surface: has(MP.surfaces, c.surface) ? c.surface : 'stone',
   };
 }
+/* A cover photo must be an image in this folder or on an https address. */
+function cleanCover(c) {
+  if (typeof c !== 'string' || !c) return '';
+  return /^(https:\/\/[^\s"'<>()]+|covers\/[\w.-]+\.(jpe?g|png|webp))$/i.test(c) ? c : '';
+}
 function clean(e) {
   if (!e || (e.kind !== 'dish' && e.kind !== 'drink') || typeof e.comp !== 'object' || !e.comp) return null;
   return {
+    tags: e.kind === 'dish' && Array.isArray(e.tags) ? e.tags.filter(t => has(MP.courses, t)).slice(0, 6) : [],
+    featured: !!e.featured,
+    cover: cleanCover(e.cover),
     id: String(e.id || ''),
     kind: e.kind,
     title: String(e.title || 'Untitled').slice(0, LIMITS.title),
@@ -108,6 +117,8 @@ const gallery = {
   remote: [],
   listeners: new Set(),
   db: null,
+  owner: false,
+  picks: {}, // premium picks made in the game: { entryId: true | false }
   async init() {
     try {
       if (window.claude && typeof window.claude.use === 'function') {
@@ -119,6 +130,13 @@ const gallery = {
             this.remote = snap.docs.map(d => clean(Object.assign({ id: d.id }, d.data()))).filter(Boolean);
             this.emit();
           }, () => { this.mode = 'local'; this.emit(); });
+          db.collection('featured').onSnapshot(snap => {
+            this.picks = {};
+            snap.docs.forEach(d => { this.picks[d.id] = !!(d.data() || {}).on; });
+            this.emit();
+          }, () => {});
+          try { const user = await window.claude.use('user'); this.owner = user ? !!(await user.isOwner()) : false; } catch (e) { this.owner = false; }
+          this.emit();
           return;
         }
       }
@@ -134,7 +152,7 @@ const gallery = {
   async refresh() {
     if (this.mode !== 'supabase') return;
     try {
-      const q = `${C.supabaseUrl}/rest/v1/recipes?select=id,kind,title,author,notes,comp,created&order=created.desc&limit=200${C.galleryNeedsApproval ? '&approved=eq.true' : ''}`;
+      const q = `${C.supabaseUrl}/rest/v1/recipes?select=id,kind,title,author,notes,comp,created,tags,featured,cover&order=created.desc&limit=200${C.galleryNeedsApproval ? '&approved=eq.true' : ''}`;
       const res = await fetch(q, { headers: this.headers() });
       if (res.ok) { this.remote = (await res.json()).map(clean).filter(Boolean); this.emit(); }
     } catch (e) { /* offline */ }
@@ -144,14 +162,14 @@ const gallery = {
     const e = clean(entry);
     if (this.mode === 'artifact') {
       const ref = this.db.collection('recipes').doc(e.id);
-      await ref.set({ kind: e.kind, title: e.title, author: e.author, notes: e.notes, comp: e.comp, created: e.created });
+      await ref.set({ kind: e.kind, title: e.title, author: e.author, notes: e.notes, comp: e.comp, created: e.created, tags: e.tags });
       return 'shared';
     }
     if (this.mode === 'supabase') {
       const res = await fetch(`${C.supabaseUrl}/rest/v1/recipes`, {
         method: 'POST',
         headers: Object.assign(this.headers(), { Prefer: 'return=minimal' }),
-        body: JSON.stringify({ kind: e.kind, title: e.title, author: e.author, notes: e.notes, comp: e.comp, created: e.created }),
+        body: JSON.stringify({ kind: e.kind, title: e.title, author: e.author, notes: e.notes, comp: e.comp, created: e.created, tags: e.tags }),
       });
       if (!res.ok) throw new Error('save failed');
       if (C.galleryNeedsApproval) return 'pending';
@@ -168,7 +186,17 @@ const gallery = {
     (mine || []).map(clean).forEach(push);
     const farm = MP.farmRecipes.map(clean);
     farm.forEach(push);
+    out.forEach(e => {
+      const p = MP.premium.find(x => x.id === e.id);
+      if (p) { e.featured = true; e.cover = e.cover || cleanCover(p.cover); }
+      if (has(this.picks, e.id)) e.featured = this.picks[e.id];
+    });
     return out.sort((a, b) => (b.farm ? 0 : 1) - (a.farm ? 0 : 1) || b.created - a.created);
+  },
+  /* Owner only, inside Claude: add a recipe to the premium section or take it out. */
+  async setPremium(id, on) {
+    if (this.mode !== 'artifact' || !this.owner) throw new Error('not allowed');
+    await this.db.collection('featured').doc(id).set({ on, at: Date.now() });
   },
   on(fn) { this.listeners.add(fn); },
   emit() { this.listeners.forEach(fn => fn()); },
