@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moshruum Patch</title>
+<meta name="description" content="Grow your own little digital mushroom with Moshruums, an urban mushroom farm in Metro Detroit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gluten:wght@500;700&family=Karla:wght@400;600;700&display=swap">
+<style>
+/* Layout: a fruiting-chamber scene on the left, the grower's clipboard on the right; stacks on phones. */
+:root {
+  --fog: #E3EADD;        /* page: damp grow-room air */
+  --card: #F7F9F3;       /* panels */
+  --moss: #2F412C;       /* ink */
+  --moss-2: #5B6D55;     /* secondary ink */
+  --line: #CAD6C2;       /* hairlines, tracks */
+  --pink: #B44F6E;       /* pink oyster: primary actions */
+  --pink-soft: #F6DCE3;
+  --lamp: #F2C14E;       /* grow-lamp highlight */
+  --ok: #5C8A4C;
+  --warn: #C27A22;
+  --f-display: "Gluten", "Baloo 2", ui-rounded, "Trebuchet MS", sans-serif;
+  --f-body: "Karla", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--fog);
+  color: var(--moss);
+  font: 16px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 28px;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--lamp); outline-offset: 2px; }
+
+.app { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
+
+/* Header */
+.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--moss); margin-right: auto; }
+.brand svg { width: 36px; height: 36px; }
+.brand span { font: 700 1.6rem/1 var(--f-display); letter-spacing: .01em; padding-top: 4px; }
+.tabs { display: flex; gap: 4px; background: var(--card); padding: 4px; border-radius: 999px; border: 1px solid var(--line); }
+.tabs button { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font-weight: 600; color: var(--moss-2); }
+.tabs button[aria-selected="true"] { background: var(--moss); color: var(--card); }
+.tabs .count { font: 500 .75rem var(--f-mono); opacity: .8; margin-left: 4px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; color: var(--moss); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* Grow room */
+.grow { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.scene-wrap { position: relative; border-radius: 28px; overflow: hidden; aspect-ratio: 400 / 440; max-width: 100%; background: #DCE6D6; box-shadow: 0 1px 0 #fff inset, 0 18px 40px -24px rgba(47, 65, 44, .45); }
+.scene-wrap svg { display: block; width: 100%; height: 100%; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 22px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.eyebrow { margin: 0; font: 500 .75rem/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--moss-2); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-size: 2.1rem; }
+h3 { font-size: 1.4rem; }
+.lede { margin: 0; color: var(--moss-2); max-width: 46ch; }
+
+.stage-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; background: var(--pink-soft); color: var(--pink); font: 500 .78rem/1.3 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; }
+.pill.ready { background: var(--lamp); color: var(--moss); }
+.pill.glow { background: #E3F5D6; color: #3E7A2E; }
+.sub { margin: 4px 0 0; color: var(--moss-2); }
+
+.progress { display: grid; gap: 6px; }
+.progress-top { display: flex; justify-content: space-between; font: 500 .8rem var(--f-mono); color: var(--moss-2); }
+.track { position: relative; height: 12px; border-radius: 999px; background: var(--fog); overflow: hidden; }
+.fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--moss); transition: width .6s ease; }
+.ticks { position: absolute; inset: 0; }
+.ticks i { position: absolute; top: 2px; bottom: 2px; width: 2px; background: var(--card); opacity: .9; }
+
+.meters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.meter { background: var(--fog); border-radius: 16px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
+.meter-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.meter-name { font-weight: 700; font-size: .9rem; }
+.meter-val { font: 500 .95rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.meter .track { height: 10px; background: var(--card); }
+.meter .band { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, rgba(92, 138, 76, .28) 0 4px, rgba(92, 138, 76, .12) 4px 8px); }
+.meter .dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--ok); border: 2px solid var(--card); transition: left .6s ease, background .3s; }
+.meter.off .dot { background: var(--warn); }
+.meter-ideal { font: .72rem var(--f-mono); color: var(--moss-2); }
+
+.note { margin: 0; min-height: 3em; padding: 10px 14px; border-radius: 14px; background: #FFF6DC; color: #5A4A1E; font-size: .95rem; }
+.note.calm { background: var(--fog); color: var(--moss-2); }
+
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.act { border: 1.5px solid var(--line); background: #fff; border-radius: 18px; padding: 12px 6px 10px; display: grid; justify-items: center; gap: 4px; transition: transform .15s ease, border-color .15s, background .15s; }
+.act svg { width: 34px; height: 34px; }
+.act b { font-size: .98rem; }
+.act small { font: .7rem var(--f-mono); color: var(--moss-2); }
+.act:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--pink); }
+.act:active:not(:disabled) { transform: translateY(1px); }
+.act:disabled { opacity: .5; cursor: default; }
+
+.btn { border: 0; border-radius: 999px; padding: 13px 22px; font-weight: 700; font-size: 1.05rem; }
+.btn.primary { background: var(--pink); color: #fff; box-shadow: 0 6px 0 -1px #8A3953; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.primary:active { transform: translateY(3px); box-shadow: 0 3px 0 -1px #8A3953; }
+.btn.ghost { background: transparent; color: var(--moss-2); padding: 8px 4px; font-weight: 600; font-size: .92rem; text-decoration: underline; text-underline-offset: 3px; }
+.btn.soft { background: var(--fog); color: var(--moss); }
+.minor { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.confirm { display: grid; gap: 10px; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--line); }
+.confirm p { margin: 0; }
+.confirm div { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Planting */
+.picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.seed { border: 1.5px solid var(--line); background: #fff; border-radius: 16px; padding: 6px 4px 8px; display: grid; justify-items: center; gap: 2px; font-size: .82rem; font-weight: 600; line-height: 1.15; text-align: center; }
+.seed svg { width: 100%; max-width: 74px; aspect-ratio: 1; }
+.seed[aria-checked="true"] { border-color: var(--pink); background: var(--pink-soft); box-shadow: 0 0 0 2px var(--pink) inset; }
+.picked { margin: 0; color: var(--moss-2); font-size: .95rem; }
+.picked em { font-style: italic; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.field label { font-weight: 700; }
+.name-row { display: flex; gap: 8px; }
+.name-row input { flex: 1; min-width: 0; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 14px; background: #fff; font-size: 1.05rem; }
+
+/* Field guide */
+.guide { display: grid; gap: 22px; }
+.guide-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+.guide-head p { margin: 0; color: var(--moss-2); font: 500 .9rem var(--f-mono); }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 820px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+.spec { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 16px; display: grid; grid-template-rows: auto auto 1fr; gap: 8px; min-width: 0; }
+.spec .thumb { background: var(--fog); border-radius: 16px; display: grid; place-items: center; padding: 6px; }
+.spec .thumb svg { width: 120px; height: 120px; }
+.spec.locked .thumb svg { filter: brightness(0) opacity(.16); }
+.spec h3 { font-size: 1.25rem; }
+.spec .latin { margin: 0; font-style: italic; color: var(--moss-2); font-size: .88rem; }
+.spec p { margin: 0; font-size: .93rem; }
+.spec .kitchen { color: var(--moss-2); }
+.spec .grown { font: 500 .75rem var(--f-mono); color: var(--pink); text-transform: uppercase; letter-spacing: .06em; }
+.basket { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 18px 20px; display: grid; gap: 10px; }
+.basket ol { list-style: none; margin: 0; padding: 0; display: grid; }
+.basket li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.basket li:first-child { border-top: 0; }
+.basket li svg { width: 44px; height: 44px; }
+.basket .who { font-weight: 700; }
+.basket .what { color: var(--moss-2); font-size: .88rem; }
+.basket .g { font: 500 .95rem var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.empty { color: var(--moss-2); margin: 0; }
+
+.foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--moss-2); font-size: .9rem; padding-top: 6px; border-top: 1px solid var(--line); }
+.foot a { color: var(--pink); font-weight: 700; }
+
+/* Modal */
+.modal { position: fixed; inset: 0; background: rgba(36, 48, 33, .55); display: grid; place-items: center; padding: 16px; z-index: 20; }
+.sheet { background: var(--card); border-radius: 26px; padding: 22px; width: min(440px, 100%); max-height: calc(100% - 16px); overflow: auto; display: grid; gap: 14px; text-align: center; }
+.sheet img { width: 100%; border-radius: 16px; display: block; }
+.sheet .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.sheet .hint { margin: 0; color: var(--moss-2); font-size: .85rem; }
+
+/* Scene animation */
+.sway { animation: sway 6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes sway { 0%, 100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } }
+.blink { animation: blink 5.5s infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+#plantLayer { transform-box: fill-box; transform-origin: 50% 100%; }
+#plantLayer.bounce { animation: bounce .7s ease; }
+@keyframes bounce { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(1.04, .95); } 60% { transform: scale(.97, 1.04); } }
+.mote { animation: mote linear infinite; }
+@keyframes mote { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .75; } 100% { transform: translate(14px, -130px); opacity: 0; } }
+.fx { animation: fx 1.2s ease-out forwards; opacity: 0; }
+@keyframes fx { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 20% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); } }
+.tool { animation: tool 1.4s ease forwards; opacity: 0; }
+@keyframes tool { 0% { opacity: 0; transform: translateY(10px); } 15%, 75% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .sway, .blink, .mote, #plantLayer.bounce { animation: none; }
+  .mote { display: none; }
+}
+
+@media (max-width: 780px) {
+  .grow { grid-template-columns: minmax(0, 1fr); }
+  h2 { font-size: 1.8rem; }
+  .brand span { font-size: 1.35rem; }
+  .tabs button { padding: 7px 11px; }
+  .panel { padding: 18px 16px; }
+}
+@media (max-width: 380px) {
+  .meters { grid-template-columns: minmax(0, 1fr); }
+  .act small { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" id="brandLink" href="https://moshruums.com" target="_blank" rel="noopener">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 21C5 10 14 5 20 5s15 5 15 16c-4 2-26 2-30 0Z" fill="#B44F6E"/><circle cx="13" cy="13" r="2.6" fill="#F6DCE3"/><circle cx="24" cy="10" r="2" fill="#F6DCE3"/><circle cx="28" cy="16" r="1.6" fill="#F6DCE3"/><path d="M14 22c0 7-1 10-2 13h16c-1-3-2-6-2-13Z" fill="#F7F9F3" stroke="#2F412C" stroke-width="2" stroke-linejoin="round"/><circle cx="17" cy="28" r="1.3" fill="#2F412C"/><circle cx="23" cy="28" r="1.3" fill="#2F412C"/></svg>
+      <span>Moshruum Patch</span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tabGrow" aria-selected="true" aria-controls="growView">Grow room</button>
+      <button role="tab" id="tabGuide" aria-selected="false" aria-controls="guideView">Field guide <span class="count" id="guideCount">0/9</span></button>
+    </nav>
+    <button class="icon-btn" id="soundBtn" aria-pressed="true" aria-label="Sound on" title="Sound"></button>
+  </header>
+
+  <main>
+    <section id="growView" class="grow" role="tabpanel" aria-labelledby="tabGrow">
+      <div class="scene-wrap">
+        <svg id="scene" viewBox="0 0 400 440" role="img" aria-label="Your mushroom grow block on a wooden table">
+          <g id="bgLayer"></g>
+          <g id="plantLayer"></g>
+          <g id="fxLayer"></g>
+        </svg>
+      </div>
+      <div class="panel" id="panel"></div>
+    </section>
+
+    <section id="guideView" class="guide" role="tabpanel" aria-labelledby="tabGuide" hidden></section>
+  </main>
+
+  <footer class="foot">
+    <span>A cozy little game from Moshruums, an urban mushroom farm in Metro Detroit.</span>
+    <a id="shopLink" href="https://moshruums.com" target="_blank" rel="noopener">Taste the real thing →</a>
+  </footer>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="sheet"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- Settings you may want to change ---------- */
+const SHOP_URL = 'https://moshruums.com';
+const STORE_KEY = 'moshruum-patch-v1';
+
+/* Time-lapse for demos: add ?speed=60 to the URL, or #timelapse (120x). */
+let SPEED = 1;
+try {
+  const q = Number(new URLSearchParams(location.search).get('speed'));
+  if (q > 0) SPEED = q;
+  if (location.hash === '#timelapse') SPEED = 120;
+} catch (e) { /* ignore */ }
+SPEED = Math.min(Math.max(SPEED, 1), 2000);
+
+/* ---------- Data ---------- */
+const STAGES = [
+  { label: 'Just planted', at: 0 },
+  { label: 'Colonizing', at: 40 },
+  { label: 'Pinning', at: 260 },
+  { label: 'Baby mushrooms', at: 420 },
+  { label: 'Fruiting', at: 640 },
+  { label: 'Ready to harvest', at: 1000 },
+];
+const MAX = 1000;
+const RH_IDEAL = 85, CO2_IDEAL = 1000;
+
+const SPECIES = {
+  blue: {
+    name: 'Blue Oyster', latin: 'Pleurotus ostreatus', tag: 'BLUE OYSTER', grams: 220, pin: '#6F86A3',
+    fact: 'Caps start a deep slate blue and fade to soft grey as they open. Oysters fruit in overlapping shelves, like a stack of little fans.',
+    kitchen: 'Tear them by hand and sear in a hot pan until the edges go crispy.',
+  },
+  pink: {
+    name: 'Pink Oyster', latin: 'Pleurotus djamor', tag: 'PINK OYSTER', grams: 200, pin: '#E58AA4',
+    fact: 'A warmth-loving oyster and one of the fastest growers. The bright pink fades to tan once it is cooked.',
+    kitchen: 'Pan-fry until crisp for a savory, almost bacon-like bite.',
+  },
+  golden: {
+    name: 'Golden Oyster', latin: 'Pleurotus citrinopileatus', tag: 'GOLDEN OYSTER', grams: 180, pin: '#E9B92F',
+    fact: 'Grows in bouquets of lemon-yellow funnels with thin, delicate caps.',
+    kitchen: 'Nutty and a little floral. Cook quickly with butter and add at the very end.',
+  },
+  lions: {
+    name: "Lion's Mane", latin: 'Hericium erinaceus', tag: "LION'S MANE", grams: 280, pin: '#EFE3C9',
+    fact: 'No caps and no gills. It grows as a shaggy pom-pom of soft, dangling spines.',
+    kitchen: 'Slice into thick steaks and sear in butter. Many people say it tastes like crab.',
+  },
+  pioppino: {
+    name: 'Pioppino', latin: 'Cyclocybe aegerita', tag: 'PIOPPINO', grams: 170, pin: '#7A4E33',
+    fact: 'Named after the Italian word for poplar tree. Grows in tight bunches of long stems topped with chestnut-brown caps.',
+    kitchen: 'Keeps a firm, crunchy stem when cooked. Lovely in risotto and stir-fries.',
+  },
+  king: {
+    name: 'King Trumpet', latin: 'Pleurotus eryngii', tag: 'KING TRUMPET', grams: 240, pin: '#B8916A',
+    fact: 'The biggest oyster relative. The thick, meaty stem is the best part.',
+    kitchen: 'Cut the stem into coins, score them, and sear like scallops.',
+  },
+  pearl: {
+    name: 'Black Pearl King', latin: 'Pleurotus hybrid', tag: 'BLACK PEARL', grams: 230, pin: '#4A4D55',
+    fact: 'A cross between king trumpet and oyster mushrooms, with dark pearl-grey caps on sturdy stems.',
+    kitchen: 'Roast or grill whole. The stems stay juicy and the caps turn golden.',
+  },
+  maitake: {
+    name: 'Maitake', latin: 'Grifola frondosa', tag: 'MAITAKE', grams: 300, pin: '#8A715E',
+    fact: 'Also called hen of the woods for its ruffled, feathery fronds. Maitake means "dancing mushroom" in Japanese.',
+    kitchen: 'Pull into clusters and roast at high heat until the edges crackle.',
+  },
+  nameko: {
+    name: 'Nameko', latin: 'Pholiota nameko', tag: 'NAMEKO', grams: 130, pin: '#C8682C',
+    fact: 'Little amber caps with a naturally glossy coat. A favorite in Japanese miso soup.',
+    kitchen: 'Simmer in soups and stews. The glossy coat gives broth a silky body.',
+  },
+};
+const ORDER = ['blue', 'pink', 'golden', 'lions', 'pioppino', 'king', 'pearl', 'maitake', 'nameko'];
+const NAMES = ['Puff', 'Button', 'Mossy', 'Dewdrop', 'Bun', 'Pebble', 'Toffee', 'Biscuit', 'Nugget', 'Fern', 'Sprout', 'Mochi', 'Pip', 'Clover', 'Hazel', 'Juniper', 'Dumpling', 'Noodle', 'Marble', 'Waffle', 'Bramble', 'Pudding', 'Sesame', 'Bean', 'Taffy', 'Gnocchi'];
+
+/* ---------- State ---------- */
+let state = load();
+let view = 'grow';
+let pickSpecies = 'blue';
+let pickName = randomName();
+let noteText = '', noteUntil = 0, noteWarm = true;
+let confirmCompost = false;
+let lastBgKey = '', lastPlantKey = '', panelMode = '';
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function blankState() { return { v: 1, plant: null, harvests: [], sound: true }; }
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s && s.v === 1) return Object.assign(blankState(), s);
+    }
+  } catch (e) { /* storage unavailable */ }
+  return blankState();
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+}
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const r1 = n => Math.round(n * 10) / 10;
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function randomName() { return NAMES[Math.floor(Math.random() * NAMES.length)]; }
+function fmtDur(min) {
+  min = Math.max(0, Math.round(min));
+  if (min < 60) return min + ' min';
+  const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), m = min % 60;
+  if (d) return d + ' d ' + h + ' h';
+  return h + ' h' + (m ? ' ' + m + ' min' : '');
+}
+function fmtDate(t) {
+  const d = new Date(t);
+  return (d.getMonth() + 1) + '/' + d.getDate();
+}
+function stageIndex(g) { let i = 0; STAGES.forEach((s, k) => { if (g >= s.at) i = k; }); return i; }
+function stageProgress(g) {
+  const i = stageIndex(g);
+  if (i >= STAGES.length - 1) return 1;
+  return (g - STAGES[i].at) / (STAGES[i + 1].at - STAGES[i].at);
+}
+
+/* ---------- Simulation ---------- */
+function rate(p) {
+  const st = stageIndex(p.growth);
+  const rhF = p.rh >= RH_IDEAL ? 1 : p.rh >= 70 ? 0.7 : 0.4;
+  const co2F = st < 2 ? 1 : p.co2 <= CO2_IDEAL ? 1 : p.co2 <= 1600 ? 0.7 : 0.45;
+  return rhF * co2F;
+}
+function simulate(p, minutes) {
+  let m = Math.min(minutes, 60 * 24 * 30);
+  const before = p.growth;
+  while (m > 0) {
+    const step = Math.min(1, m);
+    m -= step;
+    const st = stageIndex(p.growth);
+    p.rh = Math.max(45, p.rh - 0.9 * step);
+    if (st >= 1) p.co2 = Math.min(2600, p.co2 + 45 * step);
+    if (p.growth < MAX) {
+      const r = rate(p);
+      p.growth = Math.min(MAX, p.growth + r * step);
+      p.careSum += r * step;
+      p.careMin += step;
+    }
+    p.ageMin += step;
+  }
+  return p.growth - before;
+}
+function advance() {
+  const p = state.plant;
+  if (!p) return 0;
+  const now = Date.now();
+  const mins = Math.max(0, (now - p.lastTick) / 60000) * SPEED;
+  p.lastTick = now;
+  return mins > 0 ? simulate(p, mins) : 0;
+}
+function grow(p, pts) { p.growth = Math.min(MAX, p.growth + pts); }
+
+/* ---------- Mood ---------- */
+function period(d = new Date()) {
+  const h = d.getHours() + d.getMinutes() / 60;
+  if (h < 5.5 || h >= 20.5) return 'night';
+  if (h < 8) return 'dawn';
+  if (h < 17.5) return 'day';
+  return 'dusk';
+}
+function mood(p) {
+  const st = stageIndex(p.growth);
+  if (p.rh < 70 || (st >= 2 && p.co2 > 1600)) return 'thirsty';
+  if (period() === 'night' && Date.now() - (p.lastAct || 0) > 120000) return 'sleepy';
+  return 'happy';
+}
+
+/* ---------- Drawing: faces ---------- */
+const INK = '#3B2E2A';
+function face(x, y, s, md) {
+  const ex = s * 0.36, er = s * 0.085;
+  let eyes, mouth, extra = '';
+  if (md === 'sleepy') {
+    eyes = [-1, 1].map(d => `<path d="M${r1(x + d * ex - er * 1.3)} ${r1(y)} q${r1(er * 1.3)} ${r1(er * 1.2)} ${r1(er * 2.6)} 0" fill="none" stroke="${INK}" stroke-width="${r1(s * 0.05)}" stroke-linecap="round"/>`).join('');
+  } else {
+    eyes = '<g class="blink">' + [-1, 1].map(d => `<ellipse cx="${r1(x + d * ex)}" cy="${r1(y)}" rx="${r1(er * 0.85)}" ry="${r1(er * 1.1)}" fill="${INK}"/><circle cx="${r1(x + d * ex + er * 0.3)}" cy="${r1(y - er * 0.4)}" r="${r1(er * 0.32)}" fill="#fff"/>`).join('') + '</g>';
+  }
+  const my = y + er * 2.1;
+  if (md === 'thirsty') {
+    mouth = `<ellipse cx="${r1(x)}" cy="${r1(my + er * 0.3)}" rx="${r1(er * 0.55)}" ry="${r1(er * 0.7)}" fill="${INK}"/>`;
+    const sx = x + ex * 1.85, sy = y - er * 2.2;
+    extra = `<path d="M${r1(sx)} ${r1(sy)} q${r1(-er * 0.9)} ${r1(er * 1.5)} 0 ${r1(er * 1.9)} q${r1(er * 0.9)} ${r1(-er * 0.4)} 0 ${r1(-er * 1.9)}Z" fill="#9CCDEB"/>`;
+  } else if (md === 'sleepy') {
+    mouth = `<path d="M${r1(x - er * 0.6)} ${r1(my + er * 0.3)} h${r1(er * 1.2)}" stroke="${INK}" stroke-width="${r1(s * 0.04)}" stroke-linecap="round"/>`;
+  } else {
+    mouth = `<path d="M${r1(x - er * 1.1)} ${r1(my)} q${r1(er * 1.1)} ${r1(er * 1.3)} ${r1(er * 2.2)} 0" fill="none" stroke="${INK}" stroke-width="${r1(s * 0.045)}" stroke-linecap="round"/>`;
+  }
+  const blush = [-1, 1].map(d => `<ellipse cx="${r1(x + d * ex * 1.5)}" cy="${r1(y + er * 1.6)}" rx="${r1(er * 1.2)}" ry="${r1(er * 0.65)}" fill="#F08FA0" opacity=".55"/>`).join('');
+  return `<g>${blush}${eyes}${mouth}${extra}</g>`;
+}
+
+/* ---------- Drawing: species (origin = base of the cluster, y up is negative) ---------- */
+const OYSTER = {
+  blue: { cap: '#6F86A3', light: '#A3B6CD', gill: '#ECEFF0', gl: '#C9D0D6', stem: '#EEF0EA',
+    shelves: [[-4, -116, 74, 34, -4], [-36, -82, 70, 32, -16], [36, -88, 74, 34, 14], [-8, -50, 94, 42, -3]] },
+  pink: { cap: '#E58AA4', light: '#F7BCCB', gill: '#FADDE5', gl: '#EDB3C3', stem: '#F8E5EA',
+    shelves: [[-30, -122, 60, 28, -20], [24, -128, 62, 30, 16], [-44, -88, 66, 30, -22], [42, -92, 70, 32, 20], [0, -56, 98, 42, 0]] },
+  golden: { cap: '#E9B92F', light: '#F8DC7A', gill: '#FBEFC4', gl: '#EBD58D', stem: '#F8F0D6',
+    shelves: [[-44, -98, 46, 22, -28], [-14, -124, 48, 24, -8], [20, -132, 46, 22, 10], [48, -102, 48, 22, 26], [-28, -72, 56, 26, -14], [30, -76, 58, 26, 14], [0, -46, 72, 30, 0]] },
+};
+function fan(x, y, w, h, rot, c, md) {
+  let s = `<g transform="translate(${x} ${y}) rotate(${rot})">`;
+  s += `<path d="M${r1(-w / 2)} 0 C${r1(-w * 0.28)} ${r1(h * 0.44)} ${r1(w * 0.28)} ${r1(h * 0.44)} ${r1(w / 2)} 0Z" fill="${c.gill}"/>`;
+  const n = Math.max(5, Math.round(w / 11));
+  for (let i = 0; i < n; i++) {
+    const tx = -w / 2 + w * (i + 0.5) / n;
+    s += `<path d="M0 ${r1(h * 0.3)} L${r1(tx)} 1" stroke="${c.gl}" stroke-width="1.1"/>`;
+  }
+  s += `<path d="M${r1(-w / 2)} 0 C${r1(-w / 2)} ${r1(-h * 1.05)} ${r1(w / 2)} ${r1(-h * 1.05)} ${r1(w / 2)} 0 C${r1(w * 0.3)} ${r1(-h * 0.12)} ${r1(w * 0.12)} ${r1(h * 0.08)} 0 ${r1(-h * 0.02)} C${r1(-w * 0.12)} ${r1(h * 0.08)} ${r1(-w * 0.3)} ${r1(-h * 0.12)} ${r1(-w / 2)} 0Z" fill="${c.cap}"/>`;
+  s += `<path d="M${r1(-w * 0.3)} ${r1(-h * 0.5)} C${r1(-w * 0.2)} ${r1(-h * 0.76)} ${r1(w * 0.08)} ${r1(-h * 0.82)} ${r1(w * 0.2)} ${r1(-h * 0.7)}" fill="none" stroke="${c.light}" stroke-width="${r1(h * 0.13)}" stroke-linecap="round" opacity=".85"/>`;
+  if (md) s += face(0, -h * 0.4, w * 0.42, md);
+  return s + '</g>';
+}
+function drawOyster(id, md) {
+  const c = OYSTER[id];
+  const shelves = c.shelves.map(([x, y, w, h, rot]) => [x, y + 22, w, h, rot]);
+  let s = `<ellipse cx="0" cy="-2" rx="22" ry="7" fill="${c.stem}" stroke="${c.gl}" stroke-width="1.5"/>`;
+  shelves.forEach(([x, y, w, h]) => {
+    const d = `M0 0 Q${r1(x * 0.2)} ${r1(y * 0.5)} ${r1(x * 0.55)} ${r1(y + h * 0.2)}`;
+    s += `<path d="${d}" stroke="${c.gl}" stroke-width="${r1(w * 0.17 + 3)}" stroke-linecap="round" fill="none"/><path d="${d}" stroke="${c.stem}" stroke-width="${r1(w * 0.17)}" stroke-linecap="round" fill="none"/>`;
+  });
+  shelves.forEach((sh, i) => { s += fan(sh[0], sh[1], sh[2], sh[3], sh[4], c, i === shelves.length - 1 ? md : null); });
+  return s;
+}
+function drawLions(md, seed) {
+  const R = rng(seed + 7);
+  const body = '#F7F0E1', shade = '#EADDC3', spine = '#E2D1B0';
+  let s = '';
+  for (let i = 0; i < 24; i++) {
+    const x = -52 + i * 104 / 23 + (R() - 0.5) * 3;
+    const yb = -60 + 50 * Math.sqrt(Math.max(0, 1 - (x / 58) ** 2));
+    const len = 14 + R() * 12;
+    s += `<path d="M${r1(x)} ${r1(yb - 14)} q${r1((R() - 0.5) * 4)} ${r1(len * 0.6)} ${r1((R() - 0.5) * 3)} ${r1(len + 6)}" stroke="${spine}" stroke-width="4.5" stroke-linecap="round" fill="none"/>`;
+  }
+  s += `<circle cx="-30" cy="-96" r="24" fill="${body}"/><circle cx="4" cy="-110" r="27" fill="${body}"/><circle cx="34" cy="-94" r="23" fill="${body}"/>`;
+  s += `<ellipse cx="0" cy="-60" rx="58" ry="50" fill="${body}"/>`;
+  for (let y = -124; y <= -26; y += 12) {
+    for (let x = -54; x <= 54; x += 11) {
+      const xx = x + (R() - 0.5) * 6, yy = y + (R() - 0.5) * 5;
+      const inBody = ((xx / 56) ** 2 + ((yy + 60) / 48) ** 2) < 1 || Math.hypot(xx - 4, yy + 110) < 24 || Math.hypot(xx + 30, yy + 96) < 21 || Math.hypot(xx - 34, yy + 94) < 20;
+      const inFace = Math.abs(xx) < 30 && yy > -86 && yy < -44;
+      if (inBody && !inFace) s += `<path d="M${r1(xx)} ${r1(yy)} v7" stroke="${shade}" stroke-width="2.2" stroke-linecap="round"/>`;
+    }
+  }
+  for (let i = 0; i < 17; i++) {
+    const x = -44 + i * 88 / 16 + (R() - 0.5) * 3;
+    const yb = -60 + 50 * Math.sqrt(Math.max(0, 1 - (x / 58) ** 2)) - 8;
+    s += `<path d="M${r1(x)} ${r1(yb)} v${r1(9 + R() * 8)}" stroke="#EFE4CE" stroke-width="3.6" stroke-linecap="round"/>`;
+  }
+  if (md) s += face(0, -66, 46, md);
+  return s;
+}
+function domeCap(x, y, r, outer, inner, hi) {
+  let s = `<path d="M${r1(x - r)} ${r1(y)} C${r1(x - r)} ${r1(y - r * 1.25)} ${r1(x + r)} ${r1(y - r * 1.25)} ${r1(x + r)} ${r1(y)} Q${r1(x)} ${r1(y + r * 0.28)} ${r1(x - r)} ${r1(y)}Z" fill="${outer}"/>`;
+  const ri = r * 0.72, yi = y - r * 0.16;
+  s += `<path d="M${r1(x - ri)} ${r1(yi)} C${r1(x - ri)} ${r1(yi - ri * 1.25)} ${r1(x + ri)} ${r1(yi - ri * 1.25)} ${r1(x + ri)} ${r1(yi)} Q${r1(x)} ${r1(yi + ri * 0.2)} ${r1(x - ri)} ${r1(yi)}Z" fill="${inner}"/>`;
+  s += `<ellipse cx="${r1(x - r * 0.35)}" cy="${r1(y - r * 0.68)}" rx="${r1(r * 0.26)}" ry="${r1(r * 0.14)}" transform="rotate(-20 ${r1(x - r * 0.35)} ${r1(y - r * 0.68)})" fill="${hi}" opacity=".6"/>`;
+  return s;
+}
+function drawClusterCaps(caps, stem, edge, outer, inner, hi, sw, md) {
+  let s = '';
+  caps.forEach(([x, y]) => {
+    const d = `M${r1(x * 0.22)} 0 Q${r1(x * 0.12)} ${r1(y * 0.55)} ${r1(x)} ${r1(y + 2)}`;
+    s += `<path d="${d}" stroke="${edge}" stroke-width="${sw + 3}" stroke-linecap="round" fill="none"/><path d="${d}" stroke="${stem}" stroke-width="${sw}" stroke-linecap="round" fill="none"/>`;
+  });
+  caps.forEach(([x, y, r], i) => {
+    s += domeCap(x, y, r, outer, inner, hi);
+    if (md && i === caps.length - 1) s += face(x, y - r * 0.38, r * 1.15, md);
+  });
+  return s;
+}
+function drawPioppino(md) {
+  return drawClusterCaps([[-46, -90, 17], [-22, -126, 19], [4, -152, 18], [28, -118, 21], [52, -86, 16], [-4, -98, 25]],
+    '#F1E8D6', '#CDBB9C', '#B98B62', '#6E4630', '#E2C29F', 8, md);
+}
+function drawNameko(md) {
+  return drawClusterCaps([[-64, -70, 24], [-24, -100, 30], [26, -88, 27], [66, -62, 23], [-46, -40, 22], [48, -34, 21], [0, -54, 36]],
+    '#EEDFC0', '#D2BC90', '#D4772F', '#A24E1F', '#FFFFFF', 9, md);
+}
+function trumpet(x, rot, sc, c, md) {
+  let s = `<g transform="translate(${x} 0) rotate(${rot}) scale(${sc})">`;
+  s += `<path d="M-21 0 C-27 -36 -19 -84 -15 -106 L15 -106 C19 -84 27 -36 21 0 Q0 6 -21 0Z" fill="${c.stem}" stroke="#D9CCB2" stroke-width="1.5"/>`;
+  s += `<path d="M-8 -12 C-11 -40 -8 -70 -6 -96 M9 -14 C11 -44 8 -72 7 -98" stroke="#E5DACA" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  const top = c.dome ? -146 : -128;
+  s += `<path d="M-33 -104 C-35 ${top} 35 ${top} 33 -104 Q0 -94 -33 -104Z" fill="${c.cap}"/>`;
+  s += `<path d="M-30 -103 Q0 -93 30 -103 Q0 -97 -30 -103Z" fill="#E8DECB"/>`;
+  s += `<path d="M-20 ${c.dome ? -124 : -114} Q-8 ${c.dome ? -136 : -122} 8 ${c.dome ? -134 : -121}" stroke="${c.hi}" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75"/>`;
+  if (md) s += face(0, -56, 40, md);
+  return s + '</g>';
+}
+function drawKing(md, pearl) {
+  const c = pearl ? { stem: '#EFECE5', cap: '#454850', hi: '#7A7E89', dome: true } : { stem: '#F4EDDF', cap: '#B8916A', hi: '#D9BB98', dome: false };
+  return trumpet(-38, -16, 0.68, c) + trumpet(40, 14, 0.78, c) + trumpet(0, 0, 1, c, md);
+}
+function frond(x, y, w, h, rot, md) {
+  let s = `<g transform="translate(${x} ${y}) rotate(${rot})">`;
+  s += `<path d="M${r1(-w / 2)} 0 C${r1(-w / 2)} ${r1(-h * 1.05)} ${r1(w / 2)} ${r1(-h * 1.05)} ${r1(w / 2)} 0 Q0 ${r1(h * 0.35)} ${r1(-w / 2)} 0Z" fill="#9C8370"/>`;
+  s += `<path d="M${r1(-w / 2 + 2)} -2 C${r1(-w / 2 + 2)} ${r1(-h * 0.98)} ${r1(w / 2 - 2)} ${r1(-h * 0.98)} ${r1(w / 2 - 2)} -2" fill="none" stroke="#6E5848" stroke-width="3.2" stroke-linecap="round"/>`;
+  s += `<path d="M${r1(-w * 0.22)} ${r1(h * 0.05)} Q0 ${r1(-h * 0.35)} ${r1(w * 0.22)} ${r1(h * 0.05)} Q0 ${r1(h * 0.18)} ${r1(-w * 0.22)} ${r1(h * 0.05)}Z" fill="#EFE5D3"/>`;
+  s += `<path d="M${r1(-w * 0.26)} ${r1(-h * 0.62)} Q${r1(-w * 0.05)} ${r1(-h * 0.8)} ${r1(w * 0.16)} ${r1(-h * 0.7)}" stroke="#B9A08B" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if (md) s += face(0, -h * 0.42, w * 0.44, md);
+  return s + '</g>';
+}
+function drawMaitake(md) {
+  const rows = [
+    [[-24, -114, 40, 22, -14], [14, -120, 42, 24, 10]],
+    [[-50, -94, 44, 24, -28], [-8, -100, 46, 26, -4], [36, -96, 46, 24, 22]],
+    [[-62, -66, 48, 26, -34], [-24, -74, 50, 28, -12], [22, -76, 50, 28, 12], [60, -64, 48, 26, 32]],
+    [[-42, -40, 54, 28, -18], [46, -40, 54, 28, 18]],
+    [[0, -32, 70, 38, 0]],
+  ];
+  let s = '<ellipse cx="0" cy="-4" rx="40" ry="10" fill="#EDE3D0"/>';
+  rows.flat().forEach(([x, y, w, h]) => {
+    s += `<path d="M0 -4 L${r1(x * 0.6)} ${r1(y + h * 0.3)}" stroke="#F1E9DA" stroke-width="9" stroke-linecap="round"/>`;
+  });
+  rows.forEach((row, ri) => row.forEach(([x, y, w, h, rot]) => { s += frond(x, y, w, h, rot, ri === rows.length - 1 ? md : null); }));
+  return s;
+}
+function drawSpecies(id, md, seed) {
+  switch (id) {
+    case 'lions': return drawLions(md, seed || 1);
+    case 'pioppino': return drawPioppino(md);
+    case 'nameko': return drawNameko(md);
+    case 'king': return drawKing(md, false);
+    case 'pearl': return drawKing(md, true);
+    case 'maitake': return drawMaitake(md);
+    default: return drawOyster(id, md);
+  }
+}
+function thumbSvg(id, withFace = true) {
+  return `<svg viewBox="-95 -182 190 190" aria-hidden="true">${drawSpecies(id, withFace ? 'happy' : null, 3)}</svg>`;
+}
+const GLOW_DEFS = '<defs><filter id="glowF" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="6" result="b"/><feFlood flood-color="#C6FF9E" flood-opacity=".9"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+
+/* ---------- Drawing: room ---------- */
+const ROOM = {
+  dawn: { wall: '#F0E7DE', sky: ['#F4B9A1', '#FBE6C8'], tint: 0 },
+  day: { wall: '#EDF2E5', sky: ['#9CCDE6', '#DDF0F3'], tint: 0 },
+  dusk: { wall: '#E8DCE0', sky: ['#8E7FB5', '#F2A98A'], tint: 0.08 },
+  night: { wall: '#34413B', sky: ['#18203A', '#2E3A5E'], tint: 0.22 },
+};
+function bgMarkup(per, withMotes) {
+  const c = ROOM[per];
+  const R = rng(42);
+  let s = `<defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.sky[0]}"/><stop offset="1" stop-color="${c.sky[1]}"/></linearGradient></defs>`;
+  s += `<rect width="400" height="440" fill="${c.wall}"/>`;
+  // wallpaper dots
+  for (let y = 18; y < 360; y += 30) for (let x = (y / 30) % 2 ? 22 : 7; x < 400; x += 30) s += `<circle cx="${x}" cy="${y}" r="1.6" fill="${per === 'night' ? '#43524A' : '#DCE5D3'}"/>`;
+  // window
+  s += `<rect x="38" y="30" width="158" height="138" rx="16" fill="url(#skyG)"/>`;
+  if (per === 'night') {
+    for (let i = 0; i < 16; i++) s += `<circle cx="${r1(50 + R() * 134)}" cy="${r1(40 + R() * 116)}" r="${r1(0.6 + R() * 1.2)}" fill="#F4EFD2" opacity="${r1(0.5 + R() * 0.5)}"/>`;
+    s += `<circle cx="150" cy="70" r="15" fill="#F4EFD2"/><circle cx="157" cy="64" r="13" fill="${c.sky[0]}"/>`;
+  } else {
+    const sun = per === 'day' ? [146, 66] : per === 'dawn' ? [80, 128] : [150, 132];
+    s += `<circle cx="${sun[0]}" cy="${sun[1]}" r="17" fill="#FFE28C" opacity=".95"/>`;
+    s += `<g fill="#fff" opacity=".85"><ellipse cx="86" cy="80" rx="22" ry="9"/><ellipse cx="100" cy="74" rx="14" ry="9"/><ellipse cx="164" cy="112" rx="18" ry="7"/></g>`;
+  }
+  // distant tree tops
+  s += `<path d="M38 150 Q60 128 80 146 Q98 124 120 144 Q140 126 160 146 Q178 132 196 148 V168 H38Z" fill="${per === 'night' ? '#1E2B2A' : '#9DBB8A'}" opacity=".9"/>`;
+  s += `<rect x="38" y="30" width="158" height="138" rx="16" fill="none" stroke="#B98A5E" stroke-width="9"/>`;
+  s += `<path d="M117 32 V166 M40 99 H194" stroke="#B98A5E" stroke-width="6"/>`;
+  s += `<rect x="30" y="166" width="174" height="10" rx="4" fill="#A97A50"/>`;
+  // little herb pot on the sill
+  s += `<path d="M48 166 l4 -16 h18 l4 16Z" fill="#C9775A"/><path d="M61 150 q-10 -14 -4 -22 M61 150 q2 -16 10 -20 M61 150 q-2 -10 -12 -12" stroke="#5C8A4C" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  // shelf with jars
+  s += `<rect x="246" y="148" width="132" height="8" rx="3" fill="#A97A50"/>`;
+  s += `<rect x="258" y="116" width="26" height="32" rx="6" fill="#F7F3EA" opacity=".85" stroke="#C9BBA0"/><rect x="258" y="112" width="26" height="7" rx="2" fill="#B44F6E"/>`;
+  s += `<rect x="292" y="124" width="22" height="24" rx="5" fill="#F7F3EA" opacity=".85" stroke="#C9BBA0"/><rect x="292" y="120" width="22" height="6" rx="2" fill="#5C8A4C"/>`;
+  s += `<g fill="#C69669"><ellipse cx="264" cy="138" rx="4" ry="3"/><ellipse cx="274" cy="132" rx="4" ry="3"/><ellipse cx="269" cy="126" rx="3.5" ry="2.5"/></g>`;
+  s += `<path d="M330 148 v-26 h30 v26" fill="none" stroke="#A97A50" stroke-width="2"/><rect x="333" y="125" width="24" height="20" fill="#FFFDF6"/><circle cx="345" cy="135" r="7" fill="none" stroke="#6E5848" stroke-width="1.2" stroke-dasharray="1.5 1.5"/>`;
+  // pendant lamp
+  s += `<path d="M330 0 V44" stroke="#5B6D55" stroke-width="2"/><path d="M312 64 Q314 44 330 44 Q346 44 348 64Z" fill="#E8B84A"/>`;
+  if (per === 'night' || per === 'dusk') {
+    s += `<g opacity="${per === 'night' ? 0.9 : 0.5}"><circle cx="330" cy="70" r="60" fill="#FFD983" opacity=".18"/><circle cx="330" cy="70" r="34" fill="#FFE3A3" opacity=".25"/></g>`;
+  }
+  s += `<ellipse cx="330" cy="66" rx="7" ry="4" fill="#FFF1C4"/>`;
+  // table
+  s += `<rect x="0" y="362" width="400" height="78" fill="#C69669"/><rect x="0" y="362" width="400" height="9" fill="#D9AE82"/>`;
+  s += `<path d="M0 396 H140 M180 396 H400 M0 420 H90 M120 420 H330" stroke="#B4845A" stroke-width="2"/>`;
+  s += `<ellipse cx="200" cy="370" rx="104" ry="7" fill="#9E7148" opacity=".45"/>`;
+  if (c.tint) s += `<rect width="400" height="440" fill="#1B2433" opacity="${c.tint}"/>`;
+  if (withMotes) {
+    for (let i = 0; i < 7; i++) {
+      s += `<circle class="mote" cx="${r1(140 + R() * 120)}" cy="${r1(250 + R() * 80)}" r="${r1(1.2 + R() * 1.4)}" fill="${per === 'night' ? '#E9F7C9' : '#FFFFFF'}" style="animation-duration:${r1(7 + R() * 6)}s;animation-delay:-${r1(R() * 10)}s"/>`;
+    }
+  }
+  return s;
+}
+
+function plantMarkup(p, md) {
+  const st = stageIndex(p.growth), prog = stageProgress(p.growth);
+  const R = rng(p.seed);
+  const col = st === 0 ? 0.04 + prog * 0.12 : st === 1 ? 0.16 + prog * 0.84 : 1;
+  const sp = SPECIES[p.species];
+  let s = p.glow && st >= 3 ? GLOW_DEFS : '';
+  // block of sawdust substrate
+  s += `<rect x="128" y="258" width="144" height="106" rx="12" fill="#D6B486"/>`;
+  for (let i = 0; i < 70; i++) {
+    s += `<ellipse cx="${r1(134 + R() * 132)}" cy="${r1(264 + R() * 94)}" rx="${r1(1 + R() * 2.2)}" ry="${r1(0.7 + R() * 1)}" fill="${R() > 0.5 ? '#B98F5D' : '#E8D1A8'}"/>`;
+  }
+  // grain spawn
+  for (let i = 0; i < 26; i++) {
+    s += `<ellipse cx="${r1(136 + R() * 128)}" cy="${r1(262 + R() * 96)}" rx="2.6" ry="1.4" transform="rotate(${Math.round(R() * 180)} ${r1(136 + R() * 128)} ${r1(262 + R() * 96)})" fill="#F4EBD8" opacity="${r1(0.9 - col * 0.6)}"/>`;
+  }
+  s += `<rect x="128" y="258" width="144" height="106" rx="12" fill="#FBF8F1" opacity="${r1(col * 0.86 * 100) / 100}"/>`;
+  // mycelium threads
+  const threads = Math.round(col * 40);
+  for (let i = 0; i < 40; i++) {
+    let x = 134 + R() * 132, y = 262 + R() * 98;
+    let d = `M${r1(x)} ${r1(y)}`;
+    for (let k = 0; k < 4; k++) {
+      x = clamp(x + (R() - 0.5) * 30, 132, 268); y = clamp(y + (R() - 0.5) * 22, 262, 360);
+      d += ` L${r1(x)} ${r1(y)}`;
+    }
+    if (i < threads) s += `<path d="${d}" stroke="#FFFFFF" stroke-width="1.3" fill="none" opacity=".85" stroke-linejoin="round"/>`;
+  }
+  // grow bag: closed while colonizing, cut open once it fruits
+  if (st < 2) {
+    s += `<path d="M120 366 V262 Q120 246 138 238 L150 212 Q200 202 250 212 L262 238 Q280 246 280 262 V366Z" fill="#FFFFFF" fill-opacity=".2" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="2"/>`;
+    s += `<path d="M150 212 Q172 196 200 200 Q228 196 250 212" fill="none" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="2"/><rect x="182" y="198" width="36" height="8" rx="3" fill="#E9E2D2" stroke="#CFC6B3"/>`;
+  } else {
+    s += `<path d="M120 366 V266 Q120 252 132 250 M280 366 V266 Q280 252 268 250" fill="none" stroke="#FFFFFF" stroke-opacity=".75" stroke-width="2"/><path d="M120 366 V266 Q120 252 132 250 L268 250 Q280 252 280 266 V366Z" fill="#FFFFFF" fill-opacity=".14"/>`;
+  }
+  s += `<path d="M134 274 V350" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>`;
+  // farm label sticker
+  s += `<g transform="rotate(-3 200 330)"><rect x="152" y="314" width="96" height="30" rx="4" fill="#FFFDF6" stroke="#D9CBB0"/>`;
+  s += `<text x="200" y="327" text-anchor="middle" font-family="DM Mono, ui-monospace, monospace" font-size="8" fill="#2F412C" letter-spacing=".5">${esc(sp.tag)}</text>`;
+  s += `<text x="200" y="338" text-anchor="middle" font-family="DM Mono, ui-monospace, monospace" font-size="7" fill="#5B6D55">IN ${fmtDate(p.plantedAt || Date.now())} · ${esc(p.name.toUpperCase().slice(0, 10))}</text></g>`;
+  // pins
+  if (st === 2) {
+    const k = 0.35 + prog * 0.65;
+    for (let i = 0; i < 6; i++) {
+      const x = 200 + (i - 2.5) * 13 + (R() - 0.5) * 6, h = (6 + R() * 10) * k, rr = (3 + R() * 2.5) * k;
+      s += `<path d="M${r1(x)} 264 v${r1(-h - 2)}" stroke="#D9CCB2" stroke-width="${r1(rr * 1.1 + 2)}" stroke-linecap="round"/><path d="M${r1(x)} 264 v${r1(-h - 2)}" stroke="#F3EDE0" stroke-width="${r1(rr * 1.1)}" stroke-linecap="round"/><circle cx="${r1(x)}" cy="${r1(262 - h)}" r="${r1(rr)}" fill="${sp.pin}"/>`;
+    }
+  }
+  if (st >= 3) {
+    const sc = st === 3 ? 0.3 + prog * 0.25 : st === 4 ? 0.55 + prog * 0.43 : 1;
+    s += `<g transform="translate(200 264)"><g class="sway"${p.glow ? ' filter="url(#glowF)"' : ''}><g transform="scale(${r1(sc * 100) / 100})">${drawSpecies(p.species, md, p.seed)}</g></g></g>`;
+  }
+  return s;
+}
+
+/* ---------- Scene rendering ---------- */
+function renderScene(force) {
+  const per = period();
+  if (force || per !== lastBgKey) { $('bgLayer').innerHTML = bgMarkup(per, !reduceMotion); lastBgKey = per; }
+  const p = state.plant || { species: pickSpecies, name: pickName, seed: 11, growth: 0, plantedAt: Date.now(), glow: false };
+  const md = state.plant ? mood(p) : 'happy';
+  const st = stageIndex(p.growth);
+  const key = [p.species, p.name, p.seed, st, Math.round(stageProgress(p.growth) * 60), md, p.glow].join('|');
+  if (force || key !== lastPlantKey) { $('plantLayer').innerHTML = plantMarkup(p, md); lastPlantKey = key; }
+}
+
+/* ---------- FX ---------- */
+function fx(markup, ms = 1600) {
+  if (reduceMotion) return;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.innerHTML = markup;
+  $('fxLayer').appendChild(g);
+  setTimeout(() => g.remove(), ms);
+}
+function fxMist() {
+  let s = `<g class="tool"><g transform="translate(70 196) rotate(-12)"><rect x="-12" y="0" width="24" height="44" rx="8" fill="#9CCDEB"/><rect x="-8" y="-12" width="16" height="14" rx="3" fill="#F7F9F3"/><path d="M8 -8 h12 v5 h-12z" fill="#F7F9F3"/><path d="M-6 -4 q-6 10 2 16" stroke="#5B6D55" stroke-width="2" fill="none"/></g></g>`;
+  for (let i = 0; i < 18; i++) {
+    const dx = 70 + Math.random() * 110, dy = -40 + Math.random() * 80;
+    s += `<circle class="fx" cx="96" cy="190" r="${r1(1.5 + Math.random() * 2.5)}" fill="#BFE3F5" style="--dx:${r1(dx)}px;--dy:${r1(dy)}px;animation-delay:${r1(0.25 + Math.random() * 0.5)}s"/>`;
+  }
+  fx(s, 2000);
+}
+function fxFan() {
+  let s = '';
+  for (let i = 0; i < 5; i++) {
+    const y = 140 + i * 26 + Math.random() * 10;
+    s += `<path class="fx" d="M${r1(10 + Math.random() * 30)} ${r1(y)} q20 -9 40 0 t40 0 t40 0" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9" style="--dx:${r1(180 + Math.random() * 60)}px;--dy:${r1(-10 + Math.random() * 20)}px;animation-delay:${r1(i * 0.08)}s"/>`;
+  }
+  fx(s, 1800);
+}
+function fxSing() {
+  let s = '';
+  const glyphs = ['♪', '♫', '♪', '♥', '♫', '♥'];
+  glyphs.forEach((g, i) => {
+    const heart = g === '♥';
+    s += `<text class="fx" x="${r1(170 + Math.random() * 60)}" y="${r1(170 + Math.random() * 40)}" font-size="${heart ? 20 : 24}" fill="${heart ? '#E58AA4' : '#5B6D55'}" font-family="system-ui, sans-serif" style="--dx:${r1(-40 + Math.random() * 80)}px;--dy:${r1(-80 - Math.random() * 40)}px;animation-delay:${r1(i * 0.15)}s">${g}</text>`;
+  });
+  fx(s, 2200);
+}
+function fxSparkle() {
+  let s = '';
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 90;
+    s += `<path class="fx" d="M200 190 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="${i % 2 ? '#F2C14E' : '#FFFFFF'}" style="--dx:${r1(Math.cos(a) * d)}px;--dy:${r1(Math.sin(a) * d)}px;animation-delay:${r1(Math.random() * 0.3)}s"/>`;
+  }
+  fx(s, 1800);
+}
+function bounce() {
+  const el = $('plantLayer');
+  el.classList.remove('bounce');
+  void el.getBoundingClientRect();
+  el.classList.add('bounce');
+}
+
+/* ---------- Sound (generated, no files) ---------- */
+let actx = null;
+function audio() {
+  if (!state.sound) return null;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  } catch (e) { return null; }
+}
+function tone(freq, at, dur, type = 'triangle', vol = 0.1) {
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + at;
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function hiss(at, dur, f1, f2, vol = 0.06, type = 'bandpass') {
+  const a = audio(); if (!a) return;
+  const len = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = a.createBufferSource(), flt = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime + at;
+  src.buffer = buf; flt.type = type; flt.frequency.setValueAtTime(f1, t); flt.frequency.linearRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(flt).connect(g).connect(a.destination);
+  src.start(t); src.stop(t + dur + 0.05);
+}
+const SFX = {
+  mist() { hiss(0, 0.28, 5500, 6500, 0.07); hiss(0.34, 0.28, 5500, 6500, 0.07); },
+  fan() { hiss(0, 1.0, 300, 1400, 0.05, 'lowpass'); },
+  sing() {
+    const scale = [523, 587, 659, 784, 880, 1047];
+    for (let i = 0; i < 6; i++) tone(scale[Math.floor(Math.random() * scale.length)], i * 0.17, 0.3, 'sine', 0.09);
+  },
+  plant() { tone(330, 0, 0.12, 'sine', 0.12); tone(494, 0.08, 0.2, 'sine', 0.1); },
+  harvest() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.09, 0.45, 'triangle', 0.08)); },
+  tap() { tone(660, 0, 0.08, 'sine', 0.05); },
+};
+
+/* ---------- Notes ---------- */
+function say(text, warm = true, ms = 6000) { noteText = text; noteWarm = warm; noteUntil = Date.now() + ms; updatePanel(); }
+function tip(p) {
+  const st = stageIndex(p.growth);
+  if (st >= 5) return { t: `${p.name} is ready! Harvest by twisting the cluster gently off the block.`, warm: true };
+  if (p.rh < RH_IDEAL) return { t: `Humidity is down to ${Math.round(p.rh)}%. Mushrooms like 85–95%, so a mist would help.`, warm: true };
+  if (st >= 2 && p.co2 > 1600) return { t: `It's stuffy in here (${Math.round(p.co2)} ppm CO₂). Without fresh air, stems grow long and skinny as they reach for oxygen.`, warm: true };
+  if (st >= 2 && p.co2 > CO2_IDEAL) return { t: `CO₂ is creeping up. Fresh air keeps caps wide and stems short.`, warm: true };
+  return { t: [
+    'Freshly planted. The spawn is waking up inside its sawdust block.',
+    'White mycelium is spreading through the block. It likes the air a little stuffy right now, so just keep it humid.',
+    'Pins are popping up! From here on, mushrooms want plenty of fresh air and humidity.',
+    'Baby mushrooms! They can nearly double in size in a day when they are happy.',
+    'Caps are opening up. Keep the air fresh and damp for a big harvest.',
+  ][st], warm: false };
+}
+
+/* ---------- Panel ---------- */
+const ICONS = {
+  mist: '<svg viewBox="0 0 34 34" aria-hidden="true"><rect x="9" y="13" width="14" height="18" rx="5" fill="#9CCDEB"/><rect x="11" y="7" width="10" height="7" rx="2" fill="#5B6D55"/><path d="M21 9h6" stroke="#5B6D55" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="5" r="1.4" fill="#6FB2D6"/><circle cx="31" cy="11" r="1.4" fill="#6FB2D6"/><circle cx="29" cy="15" r="1.1" fill="#6FB2D6"/></svg>',
+  fan: '<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M4 11h17a4 4 0 1 0-4-4M4 18h23a4 4 0 1 1-4 4M4 25h12" stroke="#5C8A4C" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>',
+  sing: '<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M13 25V8l14-3v16" stroke="#B44F6E" stroke-width="2.6" fill="none" stroke-linejoin="round"/><ellipse cx="9.5" cy="25" rx="4.5" ry="3.5" fill="#B44F6E"/><ellipse cx="23.5" cy="21" rx="4.5" ry="3.5" fill="#B44F6E"/></svg>',
+  dice: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
+  soundOn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  soundOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+};
+
+function renderPanel() {
+  const panel = $('panel');
+  const p = state.plant;
+  const mode = p ? 'grow' : 'plant';
+  panelMode = mode;
+  if (mode === 'plant') {
+    const sp = SPECIES[pickSpecies];
+    panel.innerHTML = `
+      <p class="eyebrow">New grow block</p>
+      <h2>Pick your spores</h2>
+      <p class="lede">Choose a variety we grow on the farm. Mist it, give it fresh air, and check back over the next day to watch it fruit.</p>
+      <div class="picker" role="radiogroup" aria-label="Mushroom variety">
+        ${ORDER.map(id => `<button class="seed" role="radio" data-sp="${id}" aria-checked="${id === pickSpecies}">${thumbSvg(id)}<span>${esc(SPECIES[id].name)}</span></button>`).join('')}
+      </div>
+      <p class="picked" id="pickedInfo"><strong>${esc(sp.name)}</strong> · <em>${esc(sp.latin)}</em><br>${esc(sp.fact)}</p>
+      <div class="field">
+        <label for="nameInput">Name your mushroom</label>
+        <div class="name-row"><input id="nameInput" maxlength="18" autocomplete="off" value="${esc(pickName)}"><button class="icon-btn" id="diceBtn" aria-label="Pick a random name" title="Random name">${ICONS.dice}</button></div>
+      </div>
+      <button class="btn primary" id="plantBtn">Plant spores</button>`;
+    panel.querySelectorAll('.seed').forEach(b => b.addEventListener('click', () => {
+      pickSpecies = b.dataset.sp;
+      panel.querySelectorAll('.seed').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+      const s2 = SPECIES[pickSpecies];
+      $('pickedInfo').innerHTML = `<strong>${esc(s2.name)}</strong> · <em>${esc(s2.latin)}</em><br>${esc(s2.fact)}`;
+      SFX.tap();
+      renderScene();
+    }));
+    $('nameInput').addEventListener('input', e => { pickName = e.target.value; renderScene(); });
+    $('diceBtn').addEventListener('click', () => { pickName = randomName(); $('nameInput').value = pickName; SFX.tap(); renderScene(); });
+    $('plantBtn').addEventListener('click', plantNow);
+    return;
+  }
+  panel.innerHTML = `
+    <div>
+      <div class="stage-row"><span class="pill" id="stagePill"></span><span class="pill glow" id="glowPill" hidden>Glows in the dark</span></div>
+      <h2 style="margin-top:10px" id="pName"></h2>
+      <p class="sub" id="pSub"></p>
+    </div>
+    <div class="progress" aria-label="Growth">
+      <div class="progress-top"><span id="progLabel"></span><span id="progPct"></span></div>
+      <div class="track"><div class="fill" id="progFill"></div><div class="ticks">${STAGES.slice(1, -1).map(s => `<i style="left:${s.at / 10}%"></i>`).join('')}</div></div>
+    </div>
+    <div class="meters">
+      <div class="meter" id="mRh"><div class="meter-top"><span class="meter-name">Humidity</span><span class="meter-val" id="vRh"></span></div><div class="track"><div class="band" style="left:${(85 - 40) / 60 * 100}%;width:${(95 - 85) / 60 * 100}%"></div><div class="dot" id="dRh"></div></div><span class="meter-ideal">ideal 85–95% RH</span></div>
+      <div class="meter" id="mCo2"><div class="meter-top"><span class="meter-name">CO₂</span><span class="meter-val" id="vCo2"></span></div><div class="track"><div class="band" style="left:0;width:${(1000 - 400) / 2200 * 100}%"></div><div class="dot" id="dCo2"></div></div><span class="meter-ideal" id="co2Ideal">ideal under 1,000 ppm</span></div>
+    </div>
+    <p class="note" id="note" role="status" aria-live="polite"></p>
+    <div class="actions" id="actions">
+      <button class="act" data-act="mist">${ICONS.mist}<b>Mist</b><small>+ humidity</small></button>
+      <button class="act" data-act="fan">${ICONS.fan}<b>Fresh air</b><small>− CO₂</small></button>
+      <button class="act" data-act="sing">${ICONS.sing}<b>Sing</b><small>+ happiness</small></button>
+    </div>
+    <button class="btn primary" id="harvestBtn" hidden>Harvest</button>
+    <div class="minor" id="minor">
+      <button class="btn ghost" id="snapBtn">Save a picture</button>
+      <button class="btn ghost" id="compostBtn">Start a new block</button>
+    </div>
+    <div class="confirm" id="confirmBox" hidden>
+      <p>Compost <strong>${esc(p.name)}</strong> and start a fresh block? This one won't go in your basket.</p>
+      <div><button class="btn soft" id="keepBtn">Keep growing</button><button class="btn ghost" id="yesCompost">Yes, compost it</button></div>
+    </div>`;
+  panel.querySelectorAll('.act').forEach(b => b.addEventListener('click', () => act(b.dataset.act, b)));
+  $('harvestBtn').addEventListener('click', harvest);
+  $('snapBtn').addEventListener('click', () => showCard(cardData(state.plant)));
+  $('compostBtn').addEventListener('click', () => { confirmCompost = true; updatePanel(); $('keepBtn').focus(); });
+  $('keepBtn').addEventListener('click', () => { confirmCompost = false; updatePanel(); });
+  $('yesCompost').addEventListener('click', () => {
+    state.plant = null; confirmCompost = false; save();
+    pickName = randomName();
+    renderPanel(); renderScene(true);
+  });
+  updatePanel();
+}
+
+function updatePanel() {
+  const p = state.plant;
+  if (!p) { if (panelMode !== 'plant') renderPanel(); return; }
+  if (panelMode !== 'grow') { renderPanel(); return; }
+  const st = stageIndex(p.growth), sp = SPECIES[p.species];
+  const pill = $('stagePill');
+  pill.textContent = STAGES[st].label;
+  pill.classList.toggle('ready', st === 5);
+  $('glowPill').hidden = !(p.glow && st >= 3);
+  $('pName').textContent = p.name;
+  $('pSub').textContent = `${sp.name} · planted ${fmtDur(p.ageMin)} ago`;
+  const pct = Math.floor(p.growth / MAX * 100);
+  $('progLabel').textContent = st < 5 ? `Next: ${STAGES[st + 1].label.toLowerCase()}` : 'Fully grown';
+  $('progPct').textContent = pct + '%';
+  $('progFill').style.width = (p.growth / MAX * 100) + '%';
+  const rh = Math.round(p.rh), co2 = Math.round(p.co2);
+  $('vRh').textContent = rh + '%';
+  $('dRh').style.left = clamp((p.rh - 40) / 60 * 100, 0, 100) + '%';
+  $('mRh').classList.toggle('off', p.rh < RH_IDEAL);
+  $('vCo2').textContent = co2.toLocaleString('en-US') + ' ppm';
+  $('dCo2').style.left = clamp((p.co2 - 400) / 2200 * 100, 0, 100) + '%';
+  $('mCo2').classList.toggle('off', st >= 2 && p.co2 > CO2_IDEAL);
+  $('co2Ideal').textContent = st < 2 ? 'colonizing: CO₂ is fine' : 'ideal under 1,000 ppm';
+  const note = $('note');
+  if (Date.now() < noteUntil) { note.textContent = noteText; note.classList.toggle('calm', !noteWarm); }
+  else { const t = tip(p); note.textContent = t.t; note.classList.toggle('calm', !t.warm); }
+  $('harvestBtn').hidden = st < 5;
+  $('harvestBtn').textContent = `Harvest ${p.name}`;
+  $('confirmBox').hidden = !confirmCompost;
+  $('minor').hidden = confirmCompost;
+}
+
+/* ---------- Actions ---------- */
+function plantNow() {
+  const name = (pickName || '').trim().slice(0, 18) || randomName();
+  const now = Date.now();
+  state.plant = {
+    species: pickSpecies, name, seed: Math.floor(Math.random() * 1e9), glow: Math.random() < 1 / 12,
+    growth: 0, rh: 92, co2: 650, ageMin: 0, plantedAt: now, lastTick: now,
+    careSum: 0, careMin: 0, lastSing: 0, lastAct: now,
+  };
+  save();
+  SFX.plant();
+  renderPanel(); renderScene(true); bounce();
+  say(`${name} is tucked into a fresh block of hardwood sawdust. Come back over the next day to see it grow.`, false, 8000);
+}
+
+const busy = {};
+function act(kind, btn) {
+  const p = state.plant;
+  if (!p || busy[kind]) return;
+  advance();
+  busy[kind] = true; btn.disabled = true;
+  setTimeout(() => { busy[kind] = false; btn.disabled = false; }, 1300);
+  const st = stageIndex(p.growth);
+  const before = stageIndex(p.growth);
+  p.lastAct = Date.now();
+  if (kind === 'mist') {
+    SFX.mist(); fxMist();
+    if (p.rh < RH_IDEAL) { grow(p, 10); say(`Pssst, pssst. Lovely and humid again.`, false); }
+    else { grow(p, 1); say(`It's already nice and damp. Too much water can make it soggy.`, false); }
+    p.rh = Math.min(97, p.rh + 22);
+  } else if (kind === 'fan') {
+    SFX.fan(); fxFan();
+    if (st < 2) { say(`Mycelium likes it a little stuffy while it colonizes. Save the fresh air for when pins appear.`, false); }
+    else if (p.co2 > CO2_IDEAL) { grow(p, 10); p.co2 = Math.max(480, p.co2 - 900); say(`Whoosh! A big breath of fresh air.`, false); }
+    else { grow(p, 1); p.co2 = Math.max(480, p.co2 - 300); say(`The air is already fresh in here.`, false); }
+  } else if (kind === 'sing') {
+    SFX.sing(); fxSing(); bounce();
+    const recent = Date.now() - (p.lastSing || 0) < 3 * 60000;
+    grow(p, recent ? 1 : 4);
+    p.lastSing = Date.now();
+    const lines = st < 3
+      ? ['Something inside the block wiggles along.', 'The mycelium hums back, very quietly.']
+      : [`${p.name} sways to the tune.`, `${p.name} wiggles happily.`, `${p.name} would like an encore.`];
+    say(lines[Math.floor(Math.random() * lines.length)], false);
+  }
+  const after = stageIndex(p.growth);
+  if (after > before) stageUp(p, after);
+  save();
+  renderScene(); updatePanel();
+}
+function stageUp(p, st) {
+  SFX.harvest(); fxSparkle(); bounce();
+  if (st === 3 && p.glow) say(`Oh! ${p.name} is glowing. This one is a rare glow-in-the-dark find.`, true, 9000);
+  else if (st === 5) say(`${p.name} is fully grown and ready to harvest!`, true, 9000);
+  else say(`New stage: ${STAGES[st].label.toLowerCase()}!`, true, 6000);
+}
+
+function cardData(p) {
+  const st = stageIndex(p.growth);
+  return { species: p.species, name: p.name, seed: p.seed, glow: p.glow, growth: p.growth, plantedAt: p.plantedAt,
+    line: `${SPECIES[p.species].name} · ${STAGES[st].label.toLowerCase()}` };
+}
+function harvest() {
+  const p = state.plant;
+  if (!p || stageIndex(p.growth) < 5) return;
+  const quality = p.careMin ? clamp(p.careSum / p.careMin, 0.2, 1) : 1;
+  const grams = Math.round(SPECIES[p.species].grams * (0.7 + 0.5 * quality) * (0.92 + Math.random() * 0.16));
+  const rec = { species: p.species, name: p.name, grams, glow: p.glow, date: Date.now(), ageMin: Math.round(p.ageMin), seed: p.seed };
+  state.harvests.unshift(rec);
+  const card = cardData(p);
+  card.line = `${SPECIES[p.species].name} · ${grams} g harvested`;
+  state.plant = null;
+  pickName = randomName();
+  save();
+  SFX.harvest(); fxSparkle();
+  renderPanel(); renderScene(true); updateCount();
+  openModal(`
+    <p class="eyebrow">Harvest day</p>
+    <h2 id="modalTitle">${esc(rec.name)} weighed in at ${grams} g</h2>
+    <div style="background:var(--fog);border-radius:18px;padding:10px">${thumbSvg(rec.species)}</div>
+    <p class="hint">${esc(SPECIES[rec.species].name)} grown in ${fmtDur(rec.ageMin)}. ${rec.glow ? 'A rare glowing one, too! ' : ''}It's in your basket, and its page in the field guide is filled in.</p>
+    <div class="row"><button class="btn soft" id="mCard">Save a picture</button><button class="btn primary" id="mAgain">Plant another</button></div>`);
+  $('mAgain').addEventListener('click', closeModal);
+  $('mCard').addEventListener('click', () => showCard(card));
+  $('mAgain').focus();
+}
+
+/* ---------- Picture card ---------- */
+async function makeCard(c) {
+  const fake = { species: c.species, name: c.name, seed: c.seed, glow: c.glow, growth: c.growth, plantedAt: c.plantedAt };
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440" width="960" height="1056">${bgMarkup(period(), false)}${plantMarkup(fake, 'happy')}</svg>`;
+  const img = new Image();
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  await img.decode();
+  try { await Promise.all([document.fonts.load('700 72px Gluten'), document.fonts.load('600 34px Karla'), document.fonts.load('500 28px "DM Mono"')]); } catch (e) { /* fallback fonts */ }
+  const cv = document.createElement('canvas');
+  cv.width = 1080; cv.height = 1350;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#E3EADD'; x.fillRect(0, 0, 1080, 1350);
+  x.save();
+  x.beginPath();
+  if (x.roundRect) x.roundRect(60, 60, 960, 1056, 48); else x.rect(60, 60, 960, 1056);
+  x.clip();
+  x.drawImage(img, 60, 60, 960, 1056);
+  x.restore();
+  x.fillStyle = '#2F412C';
+  x.font = '700 72px Gluten, "Trebuchet MS", sans-serif';
+  x.fillText(c.name, 70, 1210);
+  x.fillStyle = '#5B6D55';
+  x.font = '600 34px Karla, system-ui, sans-serif';
+  x.fillText(c.line, 72, 1262);
+  x.fillStyle = '#B44F6E';
+  x.font = '500 28px "DM Mono", ui-monospace, monospace';
+  x.textAlign = 'right';
+  x.fillText('grown at moshruums.com', 1010, 1308);
+  return cv;
+}
+async function showCard(c) {
+  let url = '', cv = null;
+  try { cv = await makeCard(c); url = cv.toDataURL('image/png'); } catch (e) { url = ''; }
+  const file = (c.name || 'mushroom').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-moshruum.png';
+  openModal(`
+    <h2 id="modalTitle">${esc(c.name)}'s portrait</h2>
+    ${url ? `<img src="${url}" alt="Picture of ${esc(c.name)}, a ${esc(SPECIES[c.species].name)} mushroom">` : '<p class="hint">This browser could not draw the picture.</p>'}
+    <p class="hint">On a phone, press and hold the picture to save it.</p>
+    <div class="row">${url ? `<a class="btn soft" id="dlBtn" href="${url}" download="${file}" style="text-decoration:none">Download</a>` : ''}<button class="btn soft" id="shareBtn" hidden>Share</button><button class="btn primary" id="closeBtn">Done</button></div>`);
+  $('closeBtn').addEventListener('click', closeModal);
+  if (cv && navigator.canShare) {
+    cv.toBlob(blob => {
+      if (!blob) return;
+      const f = new File([blob], file, { type: 'image/png' });
+      if (!navigator.canShare({ files: [f] })) return;
+      const b = $('shareBtn');
+      if (!b) return;
+      b.hidden = false;
+      b.addEventListener('click', () => navigator.share({ files: [f], title: c.name, text: `Meet ${c.name}, grown at moshruums.com` }).catch(() => {}));
+    }, 'image/png');
+  }
+}
+
+/* ---------- Modal ---------- */
+let lastFocus = null;
+function openModal(html) {
+  lastFocus = document.activeElement;
+  $('sheet').innerHTML = html;
+  $('modal').hidden = false;
+  const first = $('sheet').querySelector('button, a');
+  if (first) first.focus();
+}
+function closeModal() {
+  $('modal').hidden = true;
+  if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+  else { const b = document.querySelector('#panel button'); if (b) b.focus(); }
+}
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
+
+/* ---------- Field guide ---------- */
+function updateCount() {
+  const grown = new Set(state.harvests.map(h => h.species));
+  $('guideCount').textContent = `${grown.size}/9`;
+}
+function renderGuide() {
+  const counts = {};
+  state.harvests.forEach(h => { counts[h.species] = (counts[h.species] || 0) + 1; });
+  const total = state.harvests.reduce((a, h) => a + h.grams, 0);
+  const n = Object.keys(counts).length;
+  $('guideView').innerHTML = `
+    <div class="guide-head">
+      <div><p class="eyebrow">Field guide</p><h2>Mushrooms of the farm</h2></div>
+      <p>${n} of 9 varieties grown · ${total.toLocaleString('en-US')} g harvested</p>
+    </div>
+    <div class="cards">
+      ${ORDER.map(id => {
+        const sp = SPECIES[id], c = counts[id] || 0;
+        return `<article class="spec${c ? '' : ' locked'}">
+          <div class="thumb">${thumbSvg(id, !!c)}</div>
+          <div><h3>${esc(sp.name)}</h3><p class="latin">${esc(sp.latin)}</p></div>
+          <div style="display:grid;gap:8px;align-content:start">
+            ${c ? `<span class="grown">Grown ${c}×</span><p>${esc(sp.fact)}</p><p class="kitchen"><strong>In the kitchen:</strong> ${esc(sp.kitchen)}</p>`
+                : `<p class="kitchen">Grow and harvest one to fill in this page.</p>`}
+          </div>
+        </article>`;
+      }).join('')}
+    </div>
+    <div class="basket">
+      <h3>Your basket</h3>
+      ${state.harvests.length ? `<ol>${state.harvests.slice(0, 50).map(h => `
+        <li>${thumbSvg(h.species)}<div><div class="who">${esc(h.name)}${h.glow ? ' ✦' : ''}</div><div class="what">${esc(SPECIES[h.species].name)} · harvested ${fmtDate(h.date)}</div></div><span class="g">${h.grams} g</span></li>`).join('')}</ol>`
+        : '<p class="empty">Nothing here yet. Harvest your first block and it will show up in your basket.</p>'}
+    </div>`;
+}
+function setView(v) {
+  view = v;
+  $('tabGrow').setAttribute('aria-selected', String(v === 'grow'));
+  $('tabGuide').setAttribute('aria-selected', String(v === 'guide'));
+  $('growView').hidden = v !== 'grow';
+  $('guideView').hidden = v !== 'guide';
+  if (v === 'guide') renderGuide();
+  SFX.tap();
+}
+$('tabGrow').addEventListener('click', () => setView('grow'));
+$('tabGuide').addEventListener('click', () => setView('guide'));
+
+function renderSound() {
+  const b = $('soundBtn');
+  b.innerHTML = state.sound ? ICONS.soundOn : ICONS.soundOff;
+  b.setAttribute('aria-pressed', String(state.sound));
+  b.setAttribute('aria-label', state.sound ? 'Sound on' : 'Sound off');
+}
+$('soundBtn').addEventListener('click', () => { state.sound = !state.sound; save(); renderSound(); SFX.tap(); });
+
+/* ---------- Boot ---------- */
+['brandLink', 'shopLink'].forEach(id => { $(id).href = SHOP_URL; });
+renderSound();
+updateCount();
+if (state.plant) {
+  const p = state.plant;
+  const away = (Date.now() - p.lastTick) / 60000;
+  const before = p.growth;
+  advance();
+  const grew = p.growth - before;
+  if (away > 10) {
+    const t = tip(p);
+    say(`Welcome back! ${p.name} grew ${Math.round(grew / MAX * 100)}% while you were away. ${t.warm ? t.t : ''}`.trim(), true, 12000);
+  }
+  save();
+}
+renderPanel();
+renderScene(true);
+
+let saveTick = 0;
+setInterval(() => {
+  const p = state.plant;
+  if (p) {
+    const before = stageIndex(p.growth);
+    advance();
+    const after = stageIndex(p.growth);
+    if (after > before) stageUp(p, after);
+    if (++saveTick % 10 === 0 || after > before) save();
+    updatePanel();
+  }
+  renderScene();
+}, 1000);
+document.addEventListener('visibilitychange', () => { if (document.hidden) { advance(); save(); } });
+window.addEventListener('pagehide', () => { advance(); save(); });
+
+/* Test hook: window.moshruum.debug.setGrowth(700) etc. */
+window.moshruum = { debug: {
+  setGrowth(g) { if (state.plant) { state.plant.growth = clamp(g, 0, MAX); save(); updatePanel(); renderScene(true); } },
+  state: () => state,
+} };
+})();
+</script>
+</body>
+</html>
