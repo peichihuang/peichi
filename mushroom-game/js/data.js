@@ -24,13 +24,15 @@ MP.config = {
 MP.products = [
   { id: 'morning', name: 'Morning Booster', full: 'Morning Booster, Triple Mushroom Complex Powder', line: 'Triple mushroom complex',
     label: '#FAEC88', tagline: 'ENERGY | DAILY DEFENSE | FOCUS', sub: 'triple mushroom complex', color: '#C9A46A',
-    note: "Moshruum's triple mushroom complex powder, made for your morning cup.", url: 'https://moshruums.com' },
+    note: "A triple mushroom complex of Cordyceps, Lion's Mane and Turkey Tail, made for your morning cup.", url: 'https://moshruums.com',
+    mushrooms: ['cordyceps', 'lions', 'turkeytail'] },
   { id: 'lionsmane', name: "Lion's Mane", full: "Organic Lion's Mane Mushroom Extract Powder", line: 'Organic extract powder',
-    label: '#CCCEF6', tagline: 'CLARITY | MENTAL WELLNESS | FOCUS', sub: 'mushroom extract powder', color: '#E2D3B4',
+    label: '#CCCEF6', mushrooms: ['lions'], tagline: 'CLARITY | MENTAL WELLNESS | FOCUS', sub: 'mushroom extract powder', color: '#E2D3B4',
     note: "Organic lion's mane mushroom extract powder.", url: 'https://moshruums.com' },
   { id: 'evening', name: 'Evening Glow', full: 'Evening Glow, Nighttime Mushroom Complex Powder', line: 'Nighttime mushroom complex',
     label: '#EDBCC9', tagline: 'UNWIND | BALANCE | GLOW', sub: 'four mushroom complex', color: '#9A6A5A',
-    note: 'A thoughtful blend of Reishi, Tremella, Shiitake and Chaga for evening rituals and quiet moments.', url: 'https://moshruums.com' },
+    note: 'A thoughtful blend of Reishi, Tremella, Shiitake and Chaga for evening rituals and quiet moments.', url: 'https://moshruums.com',
+    mushrooms: ['reishi'] },
 ];
 
 /* group: culinary | functional. Lion's mane is both. */

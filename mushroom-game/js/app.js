@@ -335,7 +335,7 @@ function renderCare(pane) {
     html += `<h3>Plant a block</h3>
       <div class="seg"><button aria-pressed="${ui.group === 'culinary'}" data-group="culinary"><b>Culinary</b><small>for the kitchen</small></button><button aria-pressed="${ui.group === 'functional'}" data-group="functional"><b>Functional</b><small>for the café</small></button></div>
       <div class="cards">${list.map(id => `<button class="card" data-pick="${id}" aria-pressed="${id === ui.pick}"><span class="art">${A.speciesThumb(id)}</span><b>${esc(sp(id).name)}</b></button>`).join('')}</div>
-      <p class="small"><b>${esc(s.name)}</b> <i class="muted">${esc(s.latin)}</i><br><span class="muted">${esc(s.fact)}</span></p>
+      <p class="small"><b>${esc(s.name)}</b> <i class="muted">${esc(s.latin)}</i><br><span class="muted">${esc(s.fact)}</span>${inProducts(ui.pick)}</p>
       <div class="field"><label for="nameInput">Name your block</label><div class="row"><input class="input" id="nameInput" maxlength="18" autocomplete="off" value="${esc(ui.pickName)}"><button class="icon-btn" id="diceBtn" aria-label="Random name" title="Random name">${ICON.dice}</button></div></div>
       <button class="b2 dark wide" id="plantBtn"><b>Plant ${esc(s.name)}</b><small>in slot ${ui.growSel + 1}</small></button>`;
   }
@@ -353,6 +353,12 @@ function renderCare(pane) {
   const ni = $('nameInput'); if (ni) ni.oninput = e => { ui.pickName = e.target.value; };
   pane.querySelectorAll('[data-group]').forEach(b => b.onclick = () => { ui.group = b.dataset.group; SFX.tap(); renderGrowTools(); });
   pane.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { ui.pick = b.dataset.pick; SFX.tap(); renderGrowTools(); });
+}
+/* "Also in Morning Booster": links a grown mushroom to the jars it goes into. */
+function inProducts(id) {
+  const ps = MP.products.filter(p => (p.mushrooms || []).includes(id));
+  if (!ps.length) return '';
+  return `<br><span class="muted">Also in Moshruum's ${ps.map(p => `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a>`).join(' and ')}.</span>`;
 }
 function renderPantry(pane) {
   const row = (id, label, extra) => { const p = state.pantry[id]; return `<div class="list-row">${A.speciesThumb(id)}<div><b>${label}</b><div class="small muted">${extra}</div></div><span class="num">${p.g.toLocaleString('en-US')} g</span></div>`; };
