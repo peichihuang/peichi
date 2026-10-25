@@ -153,6 +153,15 @@ p { margin: 0; }
 .meter small { font-size: .72rem; color: var(--ink-2); }
 .meter .b2 { width: 100%; }
 
+/* Selected block, under the rack */
+.grow-foot { display: grid; gap: 8px; }
+.slot-card { scroll-margin-bottom: 16px; background: rgba(251, 250, 247, .88); border-radius: 16px; padding: 12px 14px; display: grid; gap: 8px; }
+.sc-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sc-head > div { display: grid; line-height: 1.2; min-width: 0; }
+.sc-name { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; line-height: 1.05; }
+.sc-head small { font-size: .8rem; color: var(--ink-2); }
+.sc-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
 /* Plant detail */
 .detail { display: grid; gap: 12px; }
 .detail-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
@@ -243,7 +252,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .sheet .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .sheet ul { margin: 0; padding-left: 18px; }
 .sheet .gilded-art { background: radial-gradient(circle at 50% 60%, #FFF6DA, #EADFC4); border-radius: 3px; }
-.toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--dark); color: var(--page); padding: 12px 20px; border-radius: 999px; z-index: 40; max-width: calc(100% - 32px); font-size: .92rem; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .4); }
+.toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--dark); color: var(--page); padding: 12px 20px; border-radius: 18px; width: max-content; text-align: center; z-index: 40; max-width: calc(100% - 32px); font-size: .92rem; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .4); }
 
 /* Scene animation */
 .sway { animation: sway 7s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
