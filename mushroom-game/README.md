@@ -99,6 +99,13 @@ Approval is on by default because the posts are public and appear on your brand'
 - In the browser console, `MP.debug.setGrowth(0, 1000)` makes the block in slot 1 ready to harvest.
 - `#grow`, `#kitchen`, `#cafe`, `#recipes` and `#menu` at the end of the URL open that section directly.
 
+## Graphics to revisit
+
+Pei plans an illustration pass on all the mushrooms. Notes so far:
+
+- **Reishi:** no stem. It grows antlers first, then they fan out into shelves.
+- **Chestnut:** the caps have freckles.
+
 ## Ideas for later
 
 - Holiday editions, such as Christmas decor mushrooms, as collectible variants in the Collection.

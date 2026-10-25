@@ -70,7 +70,7 @@ p { margin: 0; }
 .view { padding-top: 18px; }
 .studio { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 18px; }
 #v-grow .studio { margin-top: 0; }
-.stage { background: var(--stage); border-radius: 20px; display: grid; grid-template-columns: minmax(0, 1fr); position: relative; overflow: hidden; }
+.stage { scroll-margin-top: 12px; background: var(--stage); border-radius: 20px; display: grid; grid-template-columns: minmax(0, 1fr); position: relative; overflow: hidden; }
 .stage-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 14px 14px 0; min-height: 66px; }
 .stage-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
 .stage-svg.rack { touch-action: manipulation; }

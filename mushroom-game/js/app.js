@@ -176,7 +176,7 @@ function plant() {
   state.slots[i] = { species: ui.pick, name, seed: Math.floor(Math.random() * 1e9), growth: 0, ageMin: 0, plantedAt: now, careSum: 0, careMin: 0, gilded };
   lastStages[i] = 0;
   ui.pickName = randomName();
-  SFX.place(); save(); renderGrow();
+  SFX.place(); save(); renderGrow(); showRack();
   toast(`${name} is inoculated. Keep the rack humid and check back over the next day.`);
 }
 function harvest(i) {
@@ -402,6 +402,12 @@ $('rackSvg').addEventListener('click', e => {
   ui.growSel = +g.dataset.slot; ui.confirmCompost = false; ui.growTab = 'care';
   SFX.tap(); renderGrow(); showSlotSection();
 });
+/* After starting a block, go back up to the rack so the new block is in view. */
+function showRack() {
+  const el = document.querySelector('#v-grow .stage');
+  const r = el.getBoundingClientRect();
+  if (r.top < 0 || r.top > window.innerHeight * 0.5) el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+}
 /* On phones the panel sits below the rack: bring the chosen slot's section into view. */
 function showSlotSection() {
   const el = $('slotSection');

@@ -169,8 +169,12 @@ function chestnut() {
     s += `<path d="${d}" stroke="#C9A472" stroke-width="8" stroke-linecap="round" fill="none"/><path d="${d}" stroke="#ECD7AE" stroke-width="5.5" stroke-linecap="round" fill="none"/>`;
     for (let k = 1; k < 4; k++) s += `<circle cx="${r1(x * 0.25 + (x - x * 0.25) * k / 4)}" cy="${r1(y * k / 4)}" r="1" fill="#B9874E"/>`;
   });
-  caps.forEach(([x, y, r]) => { s += dome(x, y, r, G.chestCap, 0.6); });
+  caps.forEach(([x, y, r]) => { s += dome(x, y, r, G.chestCap, 0.6) + freckles(x, y, r); });
   return s;
+}
+/* Chestnut caps are freckled with small darker scales. */
+function freckles(x, y, r) {
+  return [[-0.45, 0.3], [-0.15, 0.62], [0.2, 0.5], [0.5, 0.28], [0.02, 0.32], [-0.32, 0.5], [0.34, 0.66]].map(([a, b], i) => `<ellipse cx="${r1(x + a * r)}" cy="${r1(y - b * r)}" rx="${r1(r * (i % 3 ? 0.07 : 0.09))}" ry="${r1(r * 0.06)}" fill="${i % 4 ? '#6A2E10' : '#F2CF96'}" opacity="${i % 4 ? 0.65 : 0.8}"/>`).join('');
 }
 /* Shimeji: a tight clump of white stems with small marbled caps. */
 function shimeji() {
@@ -278,12 +282,30 @@ function conk(x, y, w, h, rot) {
   s += `<path d="M${r1(-w * 0.18)} ${r1(-h * 0.25)} Q0 ${r1(-h * 0.38)} ${r1(w * 0.12)} ${r1(-h * 0.3)}" stroke="#fff" stroke-width="${r1(h * 0.05)}" stroke-linecap="round" fill="none" opacity=".35"/>`;
   return s + '</g>';
 }
-function reishi() {
+/* Reishi has no stem. It first pushes up antlers: knobby lacquered fingers with pale growing tips. */
+function reishiAntlers() {
   let s = '';
-  s += `<path d="M10 0 C14 -12 28 -18 34 -24" stroke="#4A120C" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M10 -2 C14 -12 26 -17 32 -22" stroke="#A0402A" stroke-width="3" stroke-linecap="round" fill="none" opacity=".5"/>`;
-  s += `<path d="M-6 0 C-10 -24 -8 -46 -4 -62" stroke="#4A120C" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M-9 -4 C-12 -24 -10 -44 -7 -58" stroke="#A0402A" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".5"/>`;
-  s += conk(-4, -86, 132, 48, -4) + conk(40, -34, 80, 30, 9);
+  [[-26, 62, -16, 0], [-4, 96, 6, 1], [22, 74, 20, 0], [8, 48, -8, 0]].forEach(([x, h, lean, fork]) => {
+    const ex = x + lean, ey = -h;
+    const d = `M${x} 0 Q${r1(x + lean * 0.2)} ${r1(-h * 0.5)} ${r1(ex)} ${r1(ey)}`;
+    s += `<path d="${d}" stroke="#4A120C" stroke-width="15" stroke-linecap="round" fill="none"/><path d="${d}" stroke="#9C3A1C" stroke-width="6" stroke-linecap="round" fill="none" opacity=".7" transform="translate(-2 0)"/>`;
+    if (fork) {
+      const fd = `M${r1(x + lean * 0.4)} ${r1(-h * 0.55)} Q${r1(x + lean + 10)} ${r1(-h * 0.62)} ${r1(x + lean + 22)} ${r1(-h * 0.78)}`;
+      s += `<path d="${fd}" stroke="#4A120C" stroke-width="12" stroke-linecap="round" fill="none"/>`;
+      s += `<circle cx="${r1(x + lean + 22)}" cy="${r1(-h * 0.78)}" r="6.5" fill="#D98A3A"/><circle cx="${r1(x + lean + 23)}" cy="${r1(-h * 0.78 - 2)}" r="5" fill="#F3E3A6"/>`;
+    }
+    s += `<circle cx="${r1(ex)}" cy="${r1(ey + 2)}" r="8" fill="#D98A3A"/><circle cx="${r1(ex)}" cy="${r1(ey)}" r="6.5" fill="#F3E3A6"/><circle cx="${r1(ex - 2)}" cy="${r1(ey - 2)}" r="2" fill="#fff" opacity=".6"/>`;
+  });
   return s;
+}
+/* Then the antlers fan out into flat lacquered shelves that grow straight from the block. */
+function reishiFan(x, y, w, h, rot) {
+  const nx = x, ny = y + h * 0.22;
+  return `<path d="M${r1(nx - w * 0.16)} 4 Q${r1(nx - w * 0.1)} ${r1(ny * 0.4)} ${r1(nx - w * 0.14)} ${r1(ny)} L${r1(nx + w * 0.14)} ${r1(ny)} Q${r1(nx + w * 0.1)} ${r1(ny * 0.4)} ${r1(nx + w * 0.16)} 4Z" fill="#4A120C"/>` + conk(x, y, w, h, rot);
+}
+function reishi(st) {
+  if (st === 3) return reishiAntlers();
+  return reishiFan(-34, -62, 96, 36, -10) + reishiFan(-2, -32, 136, 50, -3) + reishiFan(48, -18, 78, 30, 10);
 }
 const TT_BANDS = ['#F4F0E6', '#B9AE9E', '#7C6A58', '#55505A', '#8A9AAB', '#5B4B3E', '#3D3631'];
 function tfan(x, y, w, h, rot) {
@@ -308,7 +330,7 @@ function cordyceps(seed) {
   }
   return s;
 }
-function cluster(id, seed = 3) {
+function cluster(id, seed = 3, st = 5) {
   switch (id) {
     case 'lions': return lions(seed);
     case 'pioppino': return pioppino();
@@ -320,7 +342,7 @@ function cluster(id, seed = 3) {
     case 'king': return king(false);
     case 'pearl': return king(true);
     case 'maitake': return maitake();
-    case 'reishi': return reishi();
+    case 'reishi': return reishi(st);
     case 'turkeytail': return turkeytail();
     case 'cordyceps': return cordyceps(seed);
     default: return oyster(id);
@@ -408,7 +430,7 @@ function slot(p) {
   if (st >= 3) {
     const sc = (st === 3 ? 0.3 + prog * 0.25 : st === 4 ? 0.55 + prog * 0.43 : 1) * (jar ? 0.95 : 1);
     const gild = p.gilded ? ` filter="${F.gild}"` : '';
-    s += `<g transform="translate(0 ${base + 2})"><g class="sway"><g transform="scale(${r1(sc * 100) / 100})"${gild}>${cluster(p.species, p.seed)}</g>`;
+    s += `<g transform="translate(0 ${base + 2})"><g class="sway"><g transform="scale(${r1(sc * 100) / 100})"${gild}>${cluster(p.species, p.seed, st)}</g>`;
     if (p.gilded) s += sparkles(7, 120 * sc, 150 * sc, p.seed);
     s += '</g></g>';
   }
@@ -480,7 +502,7 @@ const PIECES = {
   pearl: () => trumpetHalf('#3E4048'),
   pioppino: () => bunch([[-18, -38, 11], [4, -50, 12], [22, -34, 10]], G.pioCap, 0.25, 5).replace(/^/, '<g transform="translate(0 24)">') + '</g>',
   maitake: () => `<g transform="translate(0 26) scale(.55)">${frond(-30, -40, 56, 32, -20)}${frond(30, -44, 56, 32, 20)}${frond(0, -26, 70, 40, 0)}</g>`,
-  chestnut: () => dome(-14, 4, 15, G.chestCap, 0.6) + dome(14, 8, 13, G.chestCap, 0.6) + dome(0, -8, 17, G.chestCap, 0.6),
+  chestnut: () => dome(-14, 4, 15, G.chestCap, 0.6) + freckles(-14, 4, 15) + dome(14, 8, 13, G.chestCap, 0.6) + freckles(14, 8, 13) + dome(0, -8, 17, G.chestCap, 0.6) + freckles(0, -8, 17),
   shimeji: () => `<g transform="translate(0 22)">` + [[-16, -36, 11], [4, -46, 12], [20, -30, 10]].map(([x, y]) => `<path d="M${x * 0.2} 0 Q${x * 0.1} ${y * 0.5} ${x} ${y + 2}" stroke="#F6F2EA" stroke-width="6" stroke-linecap="round" fill="none"/>`).join('') + [[-16, -36, 11], [4, -46, 12], [20, -30, 10]].map(([x, y, r]) => dome(x, y, r, G.shimeCap, 0.3)).join('') + '</g>',
   enoki: () => { let s = ''; for (let i = 0; i < 14; i++) { const a = (i - 6.5) * 2.4; s += `<path d="M-30 ${r1(a * 0.3)} Q0 ${r1(a * 0.8)} 34 ${r1(a * 1.6)}" stroke="#F8F5EC" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="${r1(a * 1.6)}" rx="3" ry="3.6" fill="#F0E6CB"/>`; } return s + `<rect x="-40" y="-9" width="14" height="18" rx="5" fill="#D6C49C"/>`; },
   shiitake: () => `<circle r="34" fill="${G.shiiTop}"/><circle r="32" fill="none" stroke="#C9A27A" stroke-width="2.4"/>` + [[-12, -14, 20], [10, -16, -30], [16, 6, 60], [-14, 10, -50], [0, -4, 10], [-4, 18, 80], [20, -2, 0]].map(([x, y, t]) => `<path d="M${x - 5} ${y} h10" transform="rotate(${t} ${x} ${y})" stroke="#F3E9D6" stroke-width="2" stroke-linecap="round" opacity=".85"/>`).join(''),
