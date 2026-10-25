@@ -32,7 +32,7 @@ MP.products = [
   { id: 'evening', name: 'Evening Glow', full: 'Evening Glow, Nighttime Mushroom Complex Powder', line: 'Nighttime mushroom complex',
     label: '#EDBCC9', tagline: 'UNWIND | BALANCE | GLOW', sub: 'four mushroom complex', color: '#9A6A5A',
     note: 'A thoughtful blend of Reishi, Tremella, Shiitake and Chaga for evening rituals and quiet moments.', url: 'https://moshruums.com',
-    mushrooms: ['reishi'] },
+    mushrooms: ['reishi', 'tremella', 'shiitake'] },
 ];
 
 /* group: culinary | functional. Lion's mane is both. */
@@ -61,11 +61,23 @@ MP.species = {
   maitake: { name: 'Maitake', latin: 'Grifola frondosa', tag: 'MAITAKE', group: 'culinary', grams: 300, pin: '#8A715E',
     fact: 'Hen of the woods, for its ruffled fronds. Maitake means "dancing mushroom" in Japanese.',
     use: 'Pull into clusters and roast hot until the edges crackle.' },
-  nameko: { name: 'Nameko', latin: 'Pholiota nameko', tag: 'NAMEKO', group: 'culinary', grams: 130, pin: '#C8682C',
-    fact: 'Little amber caps with a naturally glossy coat.',
-    use: 'A favorite in miso soup. The coat gives broth a silky body.' },
+  shiitake: { name: 'Shiitake', latin: 'Lentinula edodes', tag: 'SHIITAKE', group: 'culinary', grams: 220, pin: '#7A4A2C',
+    fact: 'Thick, meaty caps with a deep savory flavor that gets even stronger when the mushrooms are dried.',
+    use: 'Slice and stir-fry, or simmer dried caps for a rich broth. Save the tough stems for stock.' },
+  shimeji: { name: 'Shimeji', latin: 'Hypsizygus tessulatus', tag: 'SHIMEJI', group: 'culinary', grams: 160, pin: '#7A5A40',
+    fact: 'Also called beech mushroom. Tight clusters of small, marbled caps on firm white stems.',
+    use: 'Always cook it, since raw shimeji tastes bitter. Pull the cluster apart and sauté, or add to soups.' },
+  enoki: { name: 'Enoki', latin: 'Flammulina filiformis', tag: 'ENOKI', group: 'culinary', grams: 140, pin: '#F1E8CF',
+    fact: 'Grown in low light with extra CO₂, which is what makes the long, thin, snow-white stems.',
+    use: 'Trim the base and pull into small bundles. Great in hot pot and ramen, or seared crisp in a pan.' },
+  chestnut: { name: 'Chestnut', latin: 'Pholiota adiposa', tag: 'CHESTNUT', group: 'culinary', grams: 170, pin: '#B8642A',
+    fact: 'Clusters of glossy, chestnut-brown caps on long, slightly scaly stems.',
+    use: 'Firm and nutty with a little crunch. Lovely sautéed in butter or stirred into risotto.' },
+  tremella: { name: 'Tremella', latin: 'Tremella fuciformis', tag: 'TREMELLA', group: 'culinary', functional: true, grams: 120, pin: '#F4EFE2', powder: '#EDE4CF',
+    fact: 'Also called snow fungus. A translucent, frilly white jelly that grows alongside a partner fungus it feeds on.',
+    use: 'Soak and simmer into sweet soups with pear and goji, or add to broths for a silky texture.' },
   reishi: { name: 'Reishi', latin: 'Ganoderma lucidum', tag: 'REISHI', group: 'functional', grams: 90, pin: '#8B2F1E', powder: '#7A3B2A',
-    fact: 'Called lingzhi in Chinese. A glossy, lacquered shelf with a cream edge while it is still growing.',
+    fact: 'Called lingzhi in Chinese. A glossy, lacquered, kidney-shaped shelf with a pale yellow rim while it is still growing.',
     use: 'Woody and bitter, so it is dried and simmered into tea rather than eaten.' },
   cordyceps: { name: 'Cordyceps', latin: 'Cordyceps militaris', tag: 'CORDYCEPS', group: 'functional', grams: 60, pin: '#E58A2E', powder: '#D9822B', jar: true,
     fact: 'Bright orange clubs. On farms it is grown in glass jars of brown rice.',
@@ -74,8 +86,9 @@ MP.species = {
     fact: "Thin, leathery fans striped like a turkey's tail feathers.",
     use: 'Too tough to chew, so it is simmered for a long time into tea.' },
 };
-MP.culinary = ['blue', 'pink', 'golden', 'lions', 'pioppino', 'king', 'pearl', 'maitake', 'nameko'];
-MP.functional = ['lions', 'reishi', 'cordyceps', 'turkeytail'];
+/* "Gourmet" in the game. Lion's Mane and Tremella are in both lists. */
+MP.culinary = ['blue', 'pink', 'golden', 'king', 'pearl', 'shiitake', 'maitake', 'shimeji', 'enoki', 'pioppino', 'chestnut', 'lions', 'tremella'];
+MP.functional = ['lions', 'tremella', 'reishi', 'cordyceps', 'turkeytail'];
 
 MP.stages = [
   { label: 'Inoculated', at: 0 },

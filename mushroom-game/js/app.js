@@ -334,7 +334,7 @@ function renderCare(pane) {
     const s = sp(ui.pick);
     html += `<h3>Start a grow block</h3>
       <p class="small muted">Mushrooms aren't planted like seeds. Growers mix spawn, grain already colonized by mycelium, into a block of hardwood sawdust${ui.group === 'functional' ? ' (cordyceps grows on brown rice in a jar)' : ''}. That step is called inoculation.</p>
-      <div class="seg"><button aria-pressed="${ui.group === 'culinary'}" data-group="culinary"><b>Culinary</b><small>for the kitchen</small></button><button aria-pressed="${ui.group === 'functional'}" data-group="functional"><b>Functional</b><small>for the café</small></button></div>
+      <div class="seg"><button aria-pressed="${ui.group === 'culinary'}" data-group="culinary"><b>Gourmet</b><small>for the kitchen</small></button><button aria-pressed="${ui.group === 'functional'}" data-group="functional"><b>Functional</b><small>for the café</small></button></div>
       <div class="cards">${list.map(id => `<button class="card" data-pick="${id}" aria-pressed="${id === ui.pick}"><span class="art">${A.speciesThumb(id)}</span><b>${esc(sp(id).name)}</b></button>`).join('')}</div>
       <p class="small"><b>${esc(s.name)}</b> <i class="muted">${esc(s.latin)}</i><br><span class="muted">${esc(s.fact)}</span>${inProducts(ui.pick)}</p>
       <div class="field"><label for="nameInput">Name your block</label><div class="row"><input class="input" id="nameInput" maxlength="18" autocomplete="off" value="${esc(ui.pickName)}"><button class="icon-btn" id="diceBtn" aria-label="Random name" title="Random name">${ICON.dice}</button></div></div>
@@ -632,7 +632,7 @@ function renderCafeTools() {
     html += `<div class="row" style="flex-wrap:wrap;gap:14px">${MP.products.map(p => `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener" style="text-decoration:underline">Shop ${esc(p.name)} ↗</a>`).join('')}</div>`;
     const sel = c.mush.map(id => MP.products.find(p => p.id === id)).filter(Boolean)[0];
     if (sel) html += `<p class="small muted"><b style="color:var(--ink)">${esc(sel.name)}.</b> ${esc(sel.note)}</p>`;
-    html += `<p class="label">From your harvest</p><div class="cards">${['reishi', 'cordyceps', 'turkeytail'].map(id => {
+    html += `<p class="label">From your harvest</p><div class="cards">${MP.functional.filter(id => sp(id).powder).map(id => {
       const has = !!state.pantry[id];
       return `<button class="card${has ? '' : ' locked'}" data-mush="${id}" aria-pressed="${c.mush.includes(id)}" ${has ? '' : 'disabled'}>${sw(sp(id).powder)}<b>${esc(sp(id).name)}</b><small>${has ? 'your powder' : 'grow it on the rack'}</small></button>`;
     }).join('')}</div>`;

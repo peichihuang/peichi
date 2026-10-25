@@ -121,6 +121,7 @@ p { margin: 0; }
 .seg button[aria-pressed="true"] small { color: #DCDCC8; }
 .label { scroll-margin-top: 16px; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
 .muted { color: var(--ink-2); }
+.pane a, .sheet a:not(.b2) { color: var(--ink); text-underline-offset: 2px; }
 .small { font-size: .86rem; }
 
 /* Cards */

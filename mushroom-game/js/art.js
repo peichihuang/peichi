@@ -40,11 +40,15 @@ const G = {
   goldGill: lg('mp-golden-g', [[0, '#F1DC9C'], [1, '#FCF4D9']]),
   lion: rg('mp-lion', [[0, '#FFFCF4'], [0.7, '#F2E8D4'], [1, '#E2D2B2']], 0.42, 0.35, 0.75),
   pioCap: rg('mp-pio', [[0, '#4F2F1C'], [0.5, '#7E5136'], [1, '#C59B72']], 0.5, 0.25, 0.9),
-  namCap: rg('mp-nam', [[0, '#8E3A12'], [0.55, '#C4652A'], [1, '#E9A55C']], 0.5, 0.2, 0.9),
+  chestCap: rg('mp-chest', [[0, '#6E3010'], [0.55, '#B8642A'], [1, '#E5A55C']], 0.5, 0.2, 0.9),
+  shimeCap: rg('mp-shime', [[0, '#4A3222'], [0.6, '#76563C'], [1, '#A88A6A']], 0.5, 0.25, 0.9),
+  shiiCap: rg('mp-shii', [[0, '#3A2014'], [0.55, '#6E4026'], [0.88, '#9C6A42'], [1, '#C59A6E']], 0.5, 0.3, 0.75),
+  shiiTop: rg('mp-shii-top', [[0, '#3A2014'], [0.6, '#6E4026'], [0.9, '#9C6A42'], [1, '#C9A27A']], 0.5, 0.5, 0.55),
+  trem: rg('mp-trem', [[0, '#FFFFFF'], [0.6, '#F6F1E6'], [1, '#E2D6BC']], 0.45, 0.35, 0.7),
+  reishiCap: rg('mp-reishi-cap', [[0, '#3A0E0A'], [0.4, '#7E2416'], [0.68, '#B44A22'], [0.84, '#D98A3A'], [0.93, '#F0D48A'], [1, '#F6EBC0']], 0.5, 0.88, 0.95),
   kingCap: rg('mp-king', [[0, '#8D6646'], [1, '#CDA884']], 0.5, 0.15, 0.95),
   pearlCap: rg('mp-pearl', [[0, '#26282E'], [1, '#666A74']], 0.5, 0.15, 0.95),
   frond: lg('mp-frond', [[0, '#4E3D31'], [0.45, '#8F7865'], [1, '#DCD0BE']]),
-  reishi: lg('mp-reishi', [[0, '#3A0F0B'], [0.5, '#7E2416'], [0.85, '#B5502A'], [1, '#E9D69B']]),
   block: lg('mp-block', [[0, '#DFC596'], [1, '#C8A672']]),
   rice: lg('mp-rice', [[0, '#EDB85E'], [1, '#D99A3C']]),
   club: lg('mp-club', [[0, '#F7B653'], [1, '#DE7A24']]),
@@ -156,7 +160,76 @@ function bunch(caps, fill, gloss, sw) {
   return s;
 }
 const pioppino = () => bunch([[-46, -90, 17], [-22, -126, 19], [4, -152, 18], [28, -118, 21], [52, -86, 16], [-4, -98, 24]], G.pioCap, 0.25, 7);
-const nameko = () => bunch([[-64, -70, 24], [-24, -100, 30], [26, -88, 27], [66, -62, 23], [-46, -40, 22], [48, -34, 21], [0, -54, 36]], G.namCap, 0.6, 9);
+/* Chestnut: glossy caps on long, pale, slightly scaly stems. */
+function chestnut() {
+  const caps = [[-42, -86, 15], [-16, -122, 17], [14, -108, 16], [40, -82, 14], [-2, -76, 19], [26, -58, 13], [-30, -56, 13]];
+  let s = '';
+  caps.forEach(([x, y]) => {
+    const d = `M${r1(x * 0.25)} 0 Q${r1(x * 0.15)} ${r1(y * 0.55)} ${r1(x)} ${r1(y + 2)}`;
+    s += `<path d="${d}" stroke="#C9A472" stroke-width="8" stroke-linecap="round" fill="none"/><path d="${d}" stroke="#ECD7AE" stroke-width="5.5" stroke-linecap="round" fill="none"/>`;
+    for (let k = 1; k < 4; k++) s += `<circle cx="${r1(x * 0.25 + (x - x * 0.25) * k / 4)}" cy="${r1(y * k / 4)}" r="1" fill="#B9874E"/>`;
+  });
+  caps.forEach(([x, y, r]) => { s += dome(x, y, r, G.chestCap, 0.6); });
+  return s;
+}
+/* Shimeji: a tight clump of white stems with small marbled caps. */
+function shimeji() {
+  const caps = [[-40, -70, 13], [-22, -98, 15], [2, -114, 14], [24, -94, 15], [42, -66, 13], [-12, -66, 14], [16, -60, 13], [0, -84, 16]];
+  let s = `<ellipse cx="0" cy="-4" rx="30" ry="9" fill="#EDE7DA"/>`;
+  caps.forEach(([x, y]) => {
+    const d = `M${r1(x * 0.3)} -4 Q${r1(x * 0.2)} ${r1(y * 0.55)} ${r1(x)} ${r1(y + 2)}`;
+    s += `<path d="${d}" stroke="#DCD3C2" stroke-width="9" stroke-linecap="round" fill="none"/><path d="${d}" stroke="#F6F2EA" stroke-width="6.5" stroke-linecap="round" fill="none"/>`;
+  });
+  caps.forEach(([x, y, r], i) => {
+    s += dome(x, y, r, G.shimeCap, 0.3);
+    s += `<ellipse cx="${r1(x - r * 0.25)}" cy="${r1(y - r * 0.5)}" rx="${r1(r * 0.16)}" ry="${r1(r * 0.1)}" fill="#B89C7E" opacity=".55"/><ellipse cx="${r1(x + r * 0.3)}" cy="${r1(y - r * 0.35)}" rx="${r1(r * 0.12)}" ry="${r1(r * 0.08)}" fill="#B89C7E" opacity=".5"/>`;
+  });
+  return s;
+}
+/* Enoki: a bundle of long, thin white stems with tiny caps. */
+function enoki(seed) {
+  const R = rng(seed + 21);
+  const tips = [];
+  let s = '';
+  for (let i = 0; i < 46; i++) {
+    const t = i / 45, bx = -22 + t * 44 + (R() - 0.5) * 4, h = 118 + R() * 46, tx = bx * 2.1 + (R() - 0.5) * 18;
+    s += `<path d="M${r1(bx)} -12 Q${r1(bx * 1.3)} ${r1(-h * 0.55)} ${r1(tx)} ${r1(-h)}" stroke="${i % 3 ? '#F8F5EC' : '#E9E1CD'}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    tips.push([tx, -h]);
+  }
+  tips.forEach(([x, y]) => { s += `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="3.8" ry="3" fill="#F0E6CB"/><ellipse cx="${r1(x - 1)}" cy="${r1(y - 1)}" rx="1.4" ry="1" fill="#fff"/>`; });
+  s += `<path d="M-28 0 C-30 -12 -18 -20 0 -20 C18 -20 30 -12 28 0Z" fill="#D6C49C"/><path d="M-20 -6 Q0 -14 20 -6" stroke="#C2AD80" stroke-width="1.4" fill="none"/>`;
+  return s;
+}
+/* Shiitake: umbrella caps with white cracks, cream gills underneath, short thick stems. */
+function shiitakeCap(x, y, r, rot) {
+  let s = `<g transform="translate(${x} ${y}) rotate(${rot})">`;
+  s += `<path d="M${-r} 0 Q0 ${r1(r * 0.34)} ${r} 0 Q0 ${r1(r * 0.12)} ${-r} 0Z" fill="#EFE5D1"/>`;
+  for (let k = -4; k <= 4; k++) s += `<path d="M0 ${r1(r * 0.12)} L${r1(k * r / 4.6)} ${r1(r * 0.14 + Math.abs(k) * -0.01 * r)}" stroke="#D9CBB0" stroke-width=".8"/>`;
+  s += `<path d="M${-r} 0 C${r1(-r * 0.95)} ${r1(-r * 0.78)} ${r1(r * 0.95)} ${r1(-r * 0.78)} ${r} 0 Q0 ${r1(r * 0.16)} ${-r} 0Z" fill="${G.shiiCap}"/>`;
+  s += `<path d="M${r1(-r * 0.96)} 0 Q0 ${r1(r * 0.15)} ${r1(r * 0.96)} 0" stroke="#C9A27A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  [[-0.5, -0.32, 20], [-0.2, -0.5, -10], [0.15, -0.46, 25], [0.45, -0.3, -30], [-0.05, -0.28, 5], [0.3, -0.18, 40], [-0.4, -0.15, -40]].forEach(([a, b, t]) => {
+    s += `<path d="M${r1(a * r - r * 0.06)} ${r1(b * r)} l${r1(r * 0.12)} ${r1(r * 0.02)}" transform="rotate(${t} ${r1(a * r)} ${r1(b * r)})" stroke="#F3E9D6" stroke-width="${r1(r * 0.045)}" stroke-linecap="round" opacity=".85"/>`;
+  });
+  return s + '</g>';
+}
+function shiitake() {
+  let s = '';
+  [[-40, -46, -18], [40, -38, 16], [0, -70, -3]].forEach(([x, y]) => {
+    const d = `M${r1(x * 0.3)} 0 Q${r1(x * 0.4)} ${r1(y * 0.5)} ${r1(x)} ${r1(y + 4)}`;
+    s += `<path d="${d}" stroke="#D9CCB4" stroke-width="13" stroke-linecap="round" fill="none"/><path d="${d}" stroke="#F1E8D8" stroke-width="10" stroke-linecap="round" fill="none"/>`;
+  });
+  s += shiitakeCap(-40, -48, 28, -18) + shiitakeCap(40, -40, 23, 16) + shiitakeCap(0, -74, 40, -3);
+  return s;
+}
+/* Tremella: translucent white ruffles. */
+function tremella(seed) {
+  const R = rng(seed + 5);
+  let s = '';
+  [[-30, -36, 32], [30, -40, 30], [0, -60, 38], [-26, -80, 28], [24, -84, 28], [0, -100, 24], [0, -28, 36]].forEach(([x, y, r]) => {
+    s += `<g transform="translate(${x} ${y}) scale(1 .78)"><path d="${blobPath(R, r, 16, 0.42)}" fill="${G.trem}" stroke="#DDD1B6" stroke-width="1" opacity=".96"/><path d="${blobPath(R, r * 0.58, 12, 0.5)}" fill="none" stroke="#fff" stroke-width="1.6" opacity=".8"/><path d="${blobPath(R, r * 0.3, 9, 0.5)}" fill="none" stroke="#E6DCC6" stroke-width="1"/></g>`;
+  });
+  return s;
+}
 function trumpet(x, rot, sc, cap, tall) {
   const top = tall ? -146 : -128;
   let s = `<g transform="translate(${x} 0) rotate(${rot}) scale(${sc})">`;
@@ -190,22 +263,26 @@ function maitake() {
   MAITAKE.forEach(row => row.forEach(([x, y, w, h, rot]) => { s += frond(x, y, w, h, rot); }));
   return s;
 }
+/* One reishi conk, seen from slightly above: a flat kidney shape, notched where the stalk joins,
+   dark lacquer at the center fading to orange and a pale growing rim, cream pores underneath. */
+function kidney(w, h, f = 1) {
+  const W = w * f / 2, H = h * f;
+  return `M${r1(-W)} 0 C${r1(-W)} ${r1(-H * 1.05)} ${r1(W)} ${r1(-H * 1.05)} ${r1(W)} 0 C${r1(W)} ${r1(H * 0.5)} ${r1(W * 0.3)} ${r1(H * 0.52)} 0 ${r1(H * 0.22)} C${r1(-W * 0.3)} ${r1(H * 0.52)} ${r1(-W)} ${r1(H * 0.5)} ${r1(-W)} 0Z`;
+}
 function conk(x, y, w, h, rot) {
   let s = `<g transform="translate(${x} ${y}) rotate(${rot})">`;
-  s += `<path d="M${r1(-w / 2)} 0 C${r1(-w / 2)} ${r1(-h * 1.1)} ${r1(w / 2)} ${r1(-h * 1.1)} ${r1(w / 2)} 0 Q0 ${r1(h * 0.22)} ${r1(-w / 2)} 0Z" fill="${G.reishi}"/>`;
-  for (let k = 1; k <= 3; k++) {
-    const f = 1 - k * 0.2;
-    s += `<path d="M${r1(-w / 2 * f)} ${r1(-h * (1 - f) * 0.5)} C${r1(-w / 2 * f)} ${r1(-h * 1.05)} ${r1(w / 2 * f)} ${r1(-h * 1.05)} ${r1(w / 2 * f)} ${r1(-h * (1 - f) * 0.5)}" fill="none" stroke="#2A0907" stroke-opacity=".25" stroke-width="1.2"/>`;
-  }
-  s += `<path d="M${r1(-w * 0.32)} ${r1(-h * 0.6)} Q${r1(-w * 0.08)} ${r1(-h * 0.86)} ${r1(w * 0.2)} ${r1(-h * 0.74)}" stroke="#fff" stroke-width="${r1(h * 0.1)}" stroke-linecap="round" fill="none" opacity=".45"/>`;
-  s += `<path d="M${r1(-w / 2)} 0 Q0 ${r1(h * 0.22)} ${r1(w / 2)} 0" stroke="#F1E3B2" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  s += `<path d="${kidney(w, h)}" transform="translate(0 5)" fill="#E6D9B8"/>`;
+  s += `<path d="${kidney(w, h)}" fill="${G.reishiCap}"/>`;
+  [0.82, 0.64, 0.46].forEach(f => { s += `<path d="${kidney(w, h, f)}" transform="translate(0 ${r1(h * 0.22 * (1 - f))})" fill="none" stroke="#2A0806" stroke-opacity=".22" stroke-width="1.1"/>`; });
+  s += `<path d="M${r1(-w * 0.3)} ${r1(-h * 0.55)} Q${r1(-w * 0.05)} ${r1(-h * 0.86)} ${r1(w * 0.24)} ${r1(-h * 0.66)}" stroke="#fff" stroke-width="${r1(h * 0.09)}" stroke-linecap="round" fill="none" opacity=".5"/>`;
+  s += `<path d="M${r1(-w * 0.18)} ${r1(-h * 0.25)} Q0 ${r1(-h * 0.38)} ${r1(w * 0.12)} ${r1(-h * 0.3)}" stroke="#fff" stroke-width="${r1(h * 0.05)}" stroke-linecap="round" fill="none" opacity=".35"/>`;
   return s + '</g>';
 }
 function reishi() {
   let s = '';
-  s += `<path d="M-6 0 C-10 -30 -28 -50 -40 -78" stroke="#4B140E" stroke-width="12" stroke-linecap="round" fill="none"/>`;
-  s += `<path d="M6 0 C12 -24 26 -36 38 -48" stroke="#4B140E" stroke-width="11" stroke-linecap="round" fill="none"/>`;
-  s += conk(-42, -84, 96, 50, -14) + conk(40, -48, 84, 42, 16);
+  s += `<path d="M10 0 C14 -12 28 -18 34 -24" stroke="#4A120C" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M10 -2 C14 -12 26 -17 32 -22" stroke="#A0402A" stroke-width="3" stroke-linecap="round" fill="none" opacity=".5"/>`;
+  s += `<path d="M-6 0 C-10 -24 -8 -46 -4 -62" stroke="#4A120C" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M-9 -4 C-12 -24 -10 -44 -7 -58" stroke="#A0402A" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".5"/>`;
+  s += conk(-4, -86, 132, 48, -4) + conk(40, -34, 80, 30, 9);
   return s;
 }
 const TT_BANDS = ['#F4F0E6', '#B9AE9E', '#7C6A58', '#55505A', '#8A9AAB', '#5B4B3E', '#3D3631'];
@@ -235,7 +312,11 @@ function cluster(id, seed = 3) {
   switch (id) {
     case 'lions': return lions(seed);
     case 'pioppino': return pioppino();
-    case 'nameko': return nameko();
+    case 'chestnut': return chestnut();
+    case 'shimeji': return shimeji();
+    case 'enoki': return enoki(seed);
+    case 'shiitake': return shiitake();
+    case 'tremella': return tremella(seed);
     case 'king': return king(false);
     case 'pearl': return king(true);
     case 'maitake': return maitake();
@@ -399,7 +480,11 @@ const PIECES = {
   pearl: () => trumpetHalf('#3E4048'),
   pioppino: () => bunch([[-18, -38, 11], [4, -50, 12], [22, -34, 10]], G.pioCap, 0.25, 5).replace(/^/, '<g transform="translate(0 24)">') + '</g>',
   maitake: () => `<g transform="translate(0 26) scale(.55)">${frond(-30, -40, 56, 32, -20)}${frond(30, -44, 56, 32, 20)}${frond(0, -26, 70, 40, 0)}</g>`,
-  nameko: () => dome(-14, 4, 15, G.namCap, 0.6) + dome(14, 8, 13, G.namCap, 0.6) + dome(0, -8, 17, G.namCap, 0.6),
+  chestnut: () => dome(-14, 4, 15, G.chestCap, 0.6) + dome(14, 8, 13, G.chestCap, 0.6) + dome(0, -8, 17, G.chestCap, 0.6),
+  shimeji: () => `<g transform="translate(0 22)">` + [[-16, -36, 11], [4, -46, 12], [20, -30, 10]].map(([x, y]) => `<path d="M${x * 0.2} 0 Q${x * 0.1} ${y * 0.5} ${x} ${y + 2}" stroke="#F6F2EA" stroke-width="6" stroke-linecap="round" fill="none"/>`).join('') + [[-16, -36, 11], [4, -46, 12], [20, -30, 10]].map(([x, y, r]) => dome(x, y, r, G.shimeCap, 0.3)).join('') + '</g>',
+  enoki: () => { let s = ''; for (let i = 0; i < 14; i++) { const a = (i - 6.5) * 2.4; s += `<path d="M-30 ${r1(a * 0.3)} Q0 ${r1(a * 0.8)} 34 ${r1(a * 1.6)}" stroke="#F8F5EC" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="${r1(a * 1.6)}" rx="3" ry="3.6" fill="#F0E6CB"/>`; } return s + `<rect x="-40" y="-9" width="14" height="18" rx="5" fill="#D6C49C"/>`; },
+  shiitake: () => `<circle r="34" fill="${G.shiiTop}"/><circle r="32" fill="none" stroke="#C9A27A" stroke-width="2.4"/>` + [[-12, -14, 20], [10, -16, -30], [16, 6, 60], [-14, 10, -50], [0, -4, 10], [-4, 18, 80], [20, -2, 0]].map(([x, y, t]) => `<path d="M${x - 5} ${y} h10" transform="rotate(${t} ${x} ${y})" stroke="#F3E9D6" stroke-width="2" stroke-linecap="round" opacity=".85"/>`).join(''),
+  tremella: () => { const R = rng(41); return [[-8, -6, 22], [10, 4, 20], [0, 10, 16]].map(([x, y, r]) => `<path d="${blobPath(R, r, 14, 0.42)}" transform="translate(${x} ${y})" fill="${G.trem}" stroke="#DDD1B6" stroke-width="1"/><path d="${blobPath(R, r * 0.55, 10, 0.5)}" transform="translate(${x} ${y})" fill="none" stroke="#fff" stroke-width="1.4" opacity=".8"/>`).join(''); },
   toast: () => {
     let s = `<path d="M-52 46 L-56 -18 C-62 -52 -30 -60 0 -54 C30 -60 62 -52 56 -18 L52 46 Q0 54 -52 46Z" fill="#B97A3B"/>`;
     s += `<path d="M-44 38 L-47 -16 C-52 -44 -26 -48 0 -44 C26 -48 52 -44 47 -16 L44 38 Q0 45 -44 38Z" fill="${G.toast}"/>`;
@@ -442,8 +527,8 @@ const PIECES = {
   cream: () => `<path d="${blobPath(rng(30), 58, 12, 0.22)}" fill="#F5EFE1"/><path d="${blobPath(rng(31), 40, 10, 0.2)}" fill="#FBF8F0" opacity=".7"/>`,
   chilioil: () => [[-14, -8, 7], [10, -12, 5], [16, 10, 8], [-6, 14, 5], [-20, 8, 4]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r + 3}" fill="#E9783A" opacity=".35"/><circle cx="${x}" cy="${y}" r="${r}" fill="#C2391B" opacity=".9"/>`).join(''),
 };
-const MUSH_PIECES = ['blue', 'pink', 'golden', 'lions', 'pioppino', 'king', 'pearl', 'maitake', 'nameko'];
-const PIECE_R = { blue: 46, pink: 46, golden: 38, lions: 40, king: 58, pearl: 58, pioppino: 40, maitake: 44, nameko: 30 };
+const MUSH_PIECES = ['blue', 'pink', 'golden', 'lions', 'pioppino', 'king', 'pearl', 'maitake', 'shiitake', 'shimeji', 'enoki', 'chestnut', 'tremella'];
+const PIECE_R = { blue: 46, pink: 46, golden: 38, lions: 40, king: 58, pearl: 58, pioppino: 40, maitake: 44, shiitake: 36, shimeji: 40, enoki: 44, chestnut: 30, tremella: 32 };
 function pieceR(t) { return PIECE_R[t] || (Object.prototype.hasOwnProperty.call(MP.ingredients, t) && MP.ingredients[t].r) || 30; }
 
 function surface(id, w = 400, h = 400) {

@@ -45,6 +45,10 @@ MP.load = function () {
         const out = Object.assign(b, s);
         out.slots = [0, 1, 2, 3].map(i => (s.slots && s.slots[i]) || null);
         if (!MP.cups[out.cafe.cup]) out.cafe.cup = 'mug'; // the ceramic cup was retired: all drinks are in glass now
+        const known = id => Object.prototype.hasOwnProperty.call(MP.species, id); // Nameko was retired
+        out.slots = out.slots.map(p => (p && known(p.species) ? p : null));
+        Object.keys(out.pantry).forEach(id => { if (!known(id)) delete out.pantry[id]; });
+        out.log = (out.log || []).filter(h => known(h.species));
         return out;
       }
     }
