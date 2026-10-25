@@ -315,7 +315,7 @@ function pins(p, k, base, R) {
   }
   return s;
 }
-/* A whole slot: block (or jar) plus mushrooms for the plant's growth. */
+/* A whole slot: block (or jar) plus mushrooms for the block's growth. */
 function slot(p) {
   const st = stageOf(p.growth), prog = stageProg(p.growth);
   const R = rng(p.seed);
@@ -337,7 +337,7 @@ function slot(p) {
 function emptySlot(selected) {
   return `<rect x="-72" y="-106" width="144" height="106" rx="12" fill="#fff" fill-opacity="${selected ? 0.5 : 0.22}" stroke="#8C8A84" stroke-opacity=".6" stroke-dasharray="5 5"/>` +
     `<circle cx="0" cy="-62" r="15" fill="none" stroke="#5E5C57" stroke-width="1.4"/><path d="M0 -70 v16 M-8 -62 h16" stroke="#5E5C57" stroke-width="1.4" stroke-linecap="round"/>` +
-    `<text x="0" y="-26" text-anchor="middle" font-family="'Hanken Grotesk', system-ui, sans-serif" font-size="11" letter-spacing="1.2" fill="#5E5C57">PLANT</text>`;
+    `<text x="0" y="-26" text-anchor="middle" font-family="'Hanken Grotesk', system-ui, sans-serif" font-size="11" letter-spacing="1.2" fill="#5E5C57">GROW</text>`;
 }
 const SLOT_POS = [[110, 196], [290, 196], [110, 396], [290, 396]];
 const SLOT_K = 0.6;
@@ -353,7 +353,7 @@ function rack(slots, selected) {
   slots.forEach((p, i) => {
     const [x, y] = SLOT_POS[i];
     const sel = i === selected;
-    s += `<g class="slot${sel ? ' sel' : ''}" data-slot="${i}" role="button" tabindex="0" aria-label="${p ? esc(p.name + ', ' + MP.species[p.species].name + ', ' + MP.stages[stageOf(p.growth)].label) : 'Empty slot. Plant here'}">`;
+    s += `<g class="slot${sel ? ' sel' : ''}" data-slot="${i}" role="button" tabindex="0" aria-label="${p ? esc(p.name + ', ' + MP.species[p.species].name + ', ' + MP.stages[stageOf(p.growth)].label) : 'Empty slot. Start a grow block here'}">`;
     s += `<rect x="${x - 88}" y="${y - 186}" width="176" height="186" fill="transparent"/>`;
     if (sel) s += `<ellipse cx="${x}" cy="${y - 4}" rx="70" ry="9" fill="#fff" opacity=".85" filter="${F.soft}"/>`;
     s += `<ellipse cx="${x}" cy="${y - 1}" rx="50" ry="4" fill="#000" opacity=".12"/>`;

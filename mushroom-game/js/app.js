@@ -153,7 +153,7 @@ function air(el) {
   state.room.co2 = Math.max(480, state.room.co2 - (stuffy ? 900 : 300));
   SFX.air(); fxAir();
   announce(stageCheck());
-  if (!state.slots.some(Boolean)) toast('Fresh air in an empty room. Plant a block first.');
+  if (!state.slots.some(Boolean)) toast('Fresh air in an empty room. Start a grow block first.');
   else if (!fruiting.length) toast('Fresh air in. Colonizing blocks like it a little stuffy, so this matters once pins appear.');
   else toast(stuffy ? 'Fresh air in. CO₂ is back down.' : 'The air is already fresh.');
   save(); renderGrow();
@@ -177,7 +177,7 @@ function plant() {
   lastStages[i] = 0;
   ui.pickName = randomName();
   SFX.place(); save(); renderGrow();
-  toast(`${name} is planted. Keep the rack humid and check back over the next day.`);
+  toast(`${name} is inoculated. Keep the rack humid and check back over the next day.`);
 }
 function harvest(i) {
   const p = state.slots[i];
@@ -201,7 +201,7 @@ function harvest(i) {
     <h2 id="modalTitle">${esc(p.name)}, ${grams} g</h2>
     <div class="preview">${A.speciesThumb(p.species)}</div>
     <p class="muted">${esc(s.name)} grown in ${fmtDur(p.ageMin)}. ${fn === 'cafe' ? 'Dried and ground into powder for the café.' : "It's in your pantry, ready for the kitchen."}</p>
-    <div class="actions"><button class="b2 dark" id="mGo"><b>${fn === 'cafe' ? 'Brew with it' : 'Cook with it'}</b><small>open the ${fn === 'cafe' ? 'café' : 'kitchen'}</small></button><button class="b2 outline" id="mAgain"><b>Plant again</b><small>back to the rack</small></button></div>`);
+    <div class="actions"><button class="b2 dark" id="mGo"><b>${fn === 'cafe' ? 'Brew with it' : 'Cook with it'}</b><small>open the ${fn === 'cafe' ? 'café' : 'kitchen'}</small></button><button class="b2 outline" id="mAgain"><b>Start another block</b><small>back to the rack</small></button></div>`);
   $('mGo').onclick = () => { closeModal(); setView(fn); };
   $('mAgain').onclick = () => { closeModal(); ui.growSel = i; renderGrow(); };
 }
@@ -268,7 +268,7 @@ function tabs(list, current, attr) {
 }
 function growTip() {
   const room = state.room, plants = state.slots.filter(Boolean);
-  if (!plants.length) return 'Tap an empty slot to plant your first block.';
+  if (!plants.length) return 'Tap an empty slot to start your first grow block.';
   const ready = plants.find(p => p.growth >= MAX);
   if (ready) return `${ready.name} is ready to harvest.`;
   if (room.rh < RH_IDEAL) return `Humidity is ${Math.round(room.rh)}%. Mushrooms like 85–95%, so mist the rack.`;
@@ -308,21 +308,21 @@ function renderCare(pane) {
   const fruiting = state.slots.some(p => p && A.stageOf(p.growth) >= 2);
   let html = '';
   if (state.intro) {
-    html += `<div class="note"><b>Welcome to the farm.</b> Your welcome box has Blue Oyster and Lion's Mane, ready to cook in the Kitchen. Plant blocks on the rack to grow more, including functional mushrooms for the Café. <button class="link" id="introOk" style="text-decoration:underline">Got it</button></div>`;
+    html += `<div class="note"><b>Welcome to the farm.</b> Your welcome box has Blue Oyster and Lion's Mane, ready to cook in the Kitchen. Start grow blocks on the rack to grow more, including functional mushrooms for the Café. <button class="link" id="introOk" style="text-decoration:underline">Got it</button></div>`;
   }
   html += `<div class="climate">
     ${meter('mRh', 'Humidity', Math.round(room.rh) + '%', clamp((room.rh - 40) / 60 * 100, 0, 100), [75, 91.7], room.rh < RH_IDEAL, 'ideal 85–95% RH', `<button class="b2 dark" id="mistBtn"><b>Mist</b><small>raise humidity</small></button>`)}
     ${meter('mCo2', 'CO₂', Math.round(room.co2).toLocaleString('en-US') + ' ppm', clamp((room.co2 - 400) / 2200 * 100, 0, 100), [0, 27.3], fruiting && room.co2 > CO2_IDEAL, fruiting ? 'ideal under 1,000 ppm' : 'colonizing blocks like it stuffy', `<button class="b2 outline" id="airBtn"><b>Fresh air</b><small>lower CO₂</small></button>`)}
   </div>`;
   const p = state.slots[ui.growSel];
-  html += `<p class="label">Slot ${ui.growSel + 1} of 4</p>`;
+  html += `<p class="label" id="slotSection">Slot ${ui.growSel + 1} of 4</p>`;
   if (p) {
     const s = sp(p.species), st = A.stageOf(p.growth), pct = Math.floor(p.growth / MAX * 100);
     html += `<div class="detail">
       <div class="detail-head"><div><h3>${esc(p.name)}</h3><p class="muted small">${esc(s.name)} · <i>${esc(s.latin)}</i></p></div>
         <div style="display:grid;gap:6px;justify-items:end"><span class="pill${st === 5 ? ' ready' : ''}">${MP.stages[st].label}</span>${p.gilded && st >= 3 ? '<span class="pill gold">Gilded</span>' : ''}</div></div>
       <div class="progress"><i style="width:${pct}%"></i></div>
-      <div class="progress-meta"><span>${st < 5 ? 'Next: ' + MP.stages[st + 1].label.toLowerCase() : 'Fully grown'}</span><span>${pct}% · planted ${fmtDur(p.ageMin)} ago</span></div>
+      <div class="progress-meta"><span>${st < 5 ? 'Next: ' + MP.stages[st + 1].label.toLowerCase() : 'Fully grown'}</span><span>${pct}% · started ${fmtDur(p.ageMin)} ago</span></div>
       <p class="small muted">${esc(s.fact)}</p>
       ${st === 5 ? `<button class="b2 dark wide" id="harvestBtn"><b>Harvest ${esc(p.name)}</b><small>${s.group === 'functional' && !s.functional ? 'dry it for the café' : 'add it to your pantry'}</small></button>` : ''}
       ${ui.confirmCompost ? `<div class="confirm"><p>Compost <b>${esc(p.name)}</b> and free this slot? It won't go in your pantry.</p><div class="row"><button class="b2 outline" id="keepBtn"><b>Keep growing</b><small>never mind</small></button><button class="b2 ghost" id="yesCompost"><b>Compost it</b><small>start fresh</small></button></div></div>`
@@ -332,12 +332,13 @@ function renderCare(pane) {
     const list = ui.group === 'functional' ? MP.functional : MP.culinary;
     if (!list.includes(ui.pick)) ui.pick = list[0];
     const s = sp(ui.pick);
-    html += `<h3>Plant a block</h3>
+    html += `<h3>Start a grow block</h3>
+      <p class="small muted">Mushrooms aren't planted like seeds. Growers mix spawn, grain already colonized by mycelium, into a block of hardwood sawdust${ui.group === 'functional' ? ' (cordyceps grows on brown rice in a jar)' : ''}. That step is called inoculation.</p>
       <div class="seg"><button aria-pressed="${ui.group === 'culinary'}" data-group="culinary"><b>Culinary</b><small>for the kitchen</small></button><button aria-pressed="${ui.group === 'functional'}" data-group="functional"><b>Functional</b><small>for the café</small></button></div>
       <div class="cards">${list.map(id => `<button class="card" data-pick="${id}" aria-pressed="${id === ui.pick}"><span class="art">${A.speciesThumb(id)}</span><b>${esc(sp(id).name)}</b></button>`).join('')}</div>
       <p class="small"><b>${esc(s.name)}</b> <i class="muted">${esc(s.latin)}</i><br><span class="muted">${esc(s.fact)}</span>${inProducts(ui.pick)}</p>
       <div class="field"><label for="nameInput">Name your block</label><div class="row"><input class="input" id="nameInput" maxlength="18" autocomplete="off" value="${esc(ui.pickName)}"><button class="icon-btn" id="diceBtn" aria-label="Random name" title="Random name">${ICON.dice}</button></div></div>
-      <button class="b2 dark wide" id="plantBtn"><b>Plant ${esc(s.name)}</b><small>in slot ${ui.growSel + 1}</small></button>`;
+      <button class="b2 dark wide" id="plantBtn"><b>Inoculate with ${esc(s.name)}</b><small>${s.jar ? 'a jar of brown rice' : 'a fresh sawdust block'} in slot ${ui.growSel + 1}</small></button>`;
   }
   pane.innerHTML = html;
   const on = (id, fn) => { const e = $(id); if (e) e.onclick = fn; };
@@ -399,13 +400,20 @@ $('rackSvg').addEventListener('click', e => {
   const g = e.target.closest('.slot');
   if (!g) return;
   ui.growSel = +g.dataset.slot; ui.confirmCompost = false; ui.growTab = 'care';
-  SFX.tap(); renderGrow();
+  SFX.tap(); renderGrow(); showSlotSection();
 });
+/* On phones the panel sits below the rack: bring the chosen slot's section into view. */
+function showSlotSection() {
+  const el = $('slotSection');
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (r.top < 0 || r.top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+}
 $('rackSvg').addEventListener('keydown', e => {
   const g = e.target.closest && e.target.closest('.slot');
   if (!g || (e.key !== 'Enter' && e.key !== ' ')) return;
   e.preventDefault();
-  ui.growSel = +g.dataset.slot; ui.growTab = 'care'; renderGrow();
+  ui.growSel = +g.dataset.slot; ui.growTab = 'care'; renderGrow(); showSlotSection();
   const again = document.querySelector(`.slot[data-slot="${ui.growSel}"]`); if (again) again.focus();
 });
 

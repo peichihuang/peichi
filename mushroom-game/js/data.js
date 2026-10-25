@@ -78,7 +78,7 @@ MP.culinary = ['blue', 'pink', 'golden', 'lions', 'pioppino', 'king', 'pearl', '
 MP.functional = ['lions', 'reishi', 'cordyceps', 'turkeytail'];
 
 MP.stages = [
-  { label: 'Just planted', at: 0 },
+  { label: 'Inoculated', at: 0 },
   { label: 'Colonizing', at: 40 },
   { label: 'Pinning', at: 260 },
   { label: 'Young', at: 420 },
