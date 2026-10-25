@@ -478,11 +478,11 @@ function renderKitchenTools() {
     html += `<div class="chips scroll-row" role="group" aria-label="Ingredient categories">${MP.ingCats.map(([k, l]) => `<button data-kcat="${k}" aria-pressed="${k === ui.kCat && !ui.kQuery}">${l}</button>`).join('')}</div>`;
     html += `<div id="kCards">${kitchenCards()}</div>`;
   } else if (ui.kTab === 'adjust') {
-    html += `<div><p class="label">Cooking</p></div><div class="cards">${Object.keys(MP.methods).map(k => `<button class="card" data-method="${k}" aria-pressed="${state.kitchen.method === k}"><b>${MP.methods[k].name}</b><small>${MP.methods[k].line}</small></button>`).join('')}</div>`;
+    html += `<div><p class="label">Cooking</p></div><div class="cards scroll">${Object.keys(MP.methods).map(k => `<button class="card" data-method="${k}" aria-pressed="${state.kitchen.method === k}"><b>${MP.methods[k].name}</b><small>${MP.methods[k].line}</small></button>`).join('')}</div>`;
     const it = state.kitchen.items[ui.kSel];
     if (it) {
       html += `<div><p class="label">Selected</p><h3 style="margin-top:4px">${esc(itemName(it.t))}</h3></div>
-        <div class="cards">
+        <div class="cards ops">
           <button class="card" data-op="rl"><b>↺ Rotate</b><small>left 15°</small></button>
           <button class="card" data-op="rr"><b>↻ Rotate</b><small>right 15°</small></button>
           <button class="card" data-op="dup"><b>Duplicate</b><small>add another</small></button>
@@ -491,13 +491,13 @@ function renderKitchenTools() {
           <button class="card" data-op="del"><b>Remove</b><small>from the plate</small></button>
           <button class="card" data-op="back"><b>Send back</b><small>one layer</small></button>
           <button class="card" data-op="front"><b>Bring forward</b><small>one layer</small></button>
-        </div><p class="small muted">Keyboard: arrows move, [ and ] rotate, + and − resize, Delete removes.</p>`;
+        </div><p class="small muted kbd-hint">Keyboard: arrows move, [ and ] rotate, + and − resize, Delete removes.</p>`;
     } else {
       html += `<p class="muted small">Tap something on the plate to rotate, resize or layer it.</p>`;
     }
   } else {
-    html += `<p class="label">Plate</p><div class="cards">${Object.keys(MP.plates).map(k => `<button class="card" data-plate="${k}" aria-pressed="${state.kitchen.plate === k}"><span class="art">${A.svg(A.dish({ plate: k, surface: state.kitchen.surface, items: [] }), '20 20 360 360')}</span><b>${MP.plates[k].name}</b><small>${MP.plates[k].line}</small></button>`).join('')}</div>`;
-    html += `<p class="label">Surface</p><div class="cards">${Object.keys(MP.surfaces).map(k => `<button class="card" data-surface="${k}" aria-pressed="${state.kitchen.surface === k}"><span class="art">${A.svg(A.surface(k), '0 0 400 400')}</span><b>${MP.surfaces[k].name}</b></button>`).join('')}</div>`;
+    html += `<p class="label">Plate</p><div class="cards scroll">${Object.keys(MP.plates).map(k => `<button class="card" data-plate="${k}" aria-pressed="${state.kitchen.plate === k}"><span class="art">${A.svg(A.dish({ plate: k, surface: state.kitchen.surface, items: [] }), '20 20 360 360')}</span><b>${MP.plates[k].name}</b><small>${MP.plates[k].line}</small></button>`).join('')}</div>`;
+    html += `<p class="label">Surface</p><div class="cards scroll">${Object.keys(MP.surfaces).map(k => `<button class="card" data-surface="${k}" aria-pressed="${state.kitchen.surface === k}"><span class="art">${A.svg(A.surface(k), '0 0 400 400')}</span><b>${MP.surfaces[k].name}</b></button>`).join('')}</div>`;
   }
   html += '</div>';
   el.innerHTML = html;
@@ -649,25 +649,23 @@ function renderCafeTools() {
   const sw = col => `<span class="swatch" style="background:${col}"></span>`;
   if (ui.cStep === 'cup') {
     html += `<div class="seg"><button data-temp="hot" aria-pressed="${c.temp === 'hot'}"><b>Hot</b><small>steamed</small></button><button data-temp="iced" aria-pressed="${c.temp === 'iced'}"><b>Iced</b><small>over ice</small></button></div>`;
-    html += `<div class="cards">${Object.keys(MP.cups).map(k => opt('data-cup', k, c.cup === k, MP.cups[k].name, MP.cups[k].line, `<span class="art">${A.svg(A.drink({ cup: k, temp: c.temp, base: c.base, milk: c.milk, mush: [], sweet: 'none', finish: [], surface: c.surface }), '80 100 240 250')}</span>`)).join('')}</div>`;
+    html += `<div class="cards scroll">${Object.keys(MP.cups).map(k => opt('data-cup', k, c.cup === k, MP.cups[k].name, MP.cups[k].line, `<span class="art">${A.svg(A.drink({ cup: k, temp: c.temp, base: c.base, milk: c.milk, mush: [], sweet: 'none', finish: [], surface: c.surface }), '80 100 240 250')}</span>`)).join('')}</div>`;
   } else if (ui.cStep === 'base') {
-    html += `<div class="cards">${Object.keys(MP.bases).map(k => opt('data-base', k, c.base === k, MP.bases[k].name, '', sw(MP.bases[k].color))).join('')}</div>`;
+    html += `<div class="cards scroll">${Object.keys(MP.bases).map(k => opt('data-base', k, c.base === k, MP.bases[k].name, '', sw(MP.bases[k].color))).join('')}</div>`;
   } else if (ui.cStep === 'milk') {
-    html += `<div class="cards">${Object.keys(MP.milks).map(k => opt('data-milk', k, c.milk === k, MP.milks[k].name, '', sw(MP.milks[k].color || 'transparent'))).join('')}</div>`;
+    html += `<div class="cards scroll">${Object.keys(MP.milks).map(k => opt('data-milk', k, c.milk === k, MP.milks[k].name, '', sw(MP.milks[k].color || 'transparent'))).join('')}</div>`;
   } else if (ui.cStep === 'mush') {
-    html += `<p class="small muted">Choose up to two. Tap again to remove.</p><p class="label">Moshruums blends</p>`;
-    html += `<div class="cards">${MP.products.map(p => `<button class="card" data-mush="${p.id}" aria-pressed="${c.mush.includes(p.id)}"><span class="art">${A.productThumb(p.id)}</span><b>${esc(p.name)}</b><small>${esc(p.line)}</small></button>`).join('')}</div>`;
-    html += `<div class="row" style="flex-wrap:wrap;gap:14px">${MP.products.map(p => `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener" style="text-decoration:underline">Shop ${esc(p.name)} ↗</a>`).join('')}</div>`;
-    const sel = c.mush.map(id => MP.products.find(p => p.id === id)).filter(Boolean)[0];
-    if (sel) html += `<p class="small muted"><b style="color:var(--ink)">${esc(sel.name)}.</b> ${esc(sel.note)}</p>`;
-    html += `<p class="label">From your harvest</p><div class="cards">${MP.functional.filter(id => sp(id).powder).map(id => {
+    html += `<p class="small muted">Choose up to two. Tap again to remove.</p>`;
+    html += `<div class="cards scroll">${MP.products.map(p => `<button class="card" data-mush="${p.id}" aria-pressed="${c.mush.includes(p.id)}"><span class="tag">Moshruum's</span><span class="art">${A.productThumb(p.id)}</span><b>${esc(p.name)}</b><small>${esc(p.line)}</small></button>`).join('')}${MP.functional.filter(id => sp(id).powder).map(id => {
       const has = !!state.pantry[id];
-      return `<button class="card${has ? '' : ' locked'}" data-mush="${id}" aria-pressed="${c.mush.includes(id)}" ${has ? '' : 'disabled'}>${sw(sp(id).powder)}<b>${esc(sp(id).name)}</b><small>${has ? 'your powder' : 'grow it on the rack'}</small></button>`;
+      return `<button class="card${has ? '' : ' locked'}" data-mush="${id}" aria-pressed="${c.mush.includes(id)}" ${has ? '' : 'disabled'}><span class="tag">Your harvest</span>${sw(sp(id).powder)}<b>${esc(sp(id).name)}</b><small>${has ? 'your powder' : 'grow it on the rack'}</small></button>`;
     }).join('')}</div>`;
+    const sel = c.mush.map(id => MP.products.find(p => p.id === id)).filter(Boolean)[0];
+    if (sel) html += `<p class="small muted"><b style="color:var(--ink)">${esc(sel.name)}.</b> ${esc(sel.note)} <a href="${esc(sel.url)}" target="_blank" rel="noopener">Shop ${esc(sel.name)} ↗</a></p>`;
   } else if (ui.cStep === 'sweet') {
-    html += `<div class="cards">${Object.keys(MP.sweets).map(k => opt('data-sweet', k, c.sweet === k, MP.sweets[k].name, MP.sweets[k].line)).join('')}</div>`;
+    html += `<div class="cards scroll">${Object.keys(MP.sweets).map(k => opt('data-sweet', k, c.sweet === k, MP.sweets[k].name, MP.sweets[k].line)).join('')}</div>`;
   } else {
-    html += `<p class="small muted">Pick as many as you like.</p><div class="cards">${Object.keys(MP.finishes).map(k => {
+    html += `<p class="small muted">Pick as many as you like.</p><div class="cards scroll">${Object.keys(MP.finishes).map(k => {
       const ok = finishOk(k, c);
       return opt('data-finish', k, c.finish.includes(k), MP.finishes[k].name, ok ? MP.finishes[k].line : (k === 'art' ? 'needs a hot milk drink in the glass mug' : k === 'pearls' ? 'needs a tall or short glass' : 'needs milk'), '', !ok);
     }).join('')}</div>`;

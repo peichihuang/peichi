@@ -99,6 +99,15 @@ Approval is on by default because the posts are public and appear on your brand'
 - In the browser console, `MP.debug.setGrowth(0, 1000)` makes the block in slot 1 ready to harvest.
 - `#grow`, `#kitchen`, `#cafe`, `#recipes` and `#menu` at the end of the URL open that section directly.
 
+## To do with Pei
+
+Pei wants to work through these one at a time:
+
+1. **Kitchen and café workflows and options.** There's room to improve how players build a dish or a drink.
+2. **Graphics for everything** (see the notes below).
+3. **Menu options, plates and glasses.** Make them more aesthetic.
+4. **A final section for each recipe.** Details to come.
+
 ## Graphics to revisit
 
 Pei plans an illustration pass on all the mushrooms. Notes so far:

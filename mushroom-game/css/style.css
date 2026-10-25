@@ -267,6 +267,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .slot:focus-visible rect:first-child { stroke: var(--ink); stroke-width: 2; }
 .item { cursor: grab; }
 .item.sel { cursor: move; }
+@media (hover: none) { .kbd-hint { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .sway, .twinkle, .steam { animation: none; }
   .fx { display: none; }
@@ -295,5 +296,22 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
   .pane { padding: 14px; }
   .cards.scroll { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 38%; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
   .cards.scroll .card { scroll-snap-align: start; }
+  .cards.scroll { grid-auto-columns: 31%; }
+  .cards.ops { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .tabs button { padding: 10px 5px 8px; }
+  .tabs button b { font-size: .88rem; }
+  .tabs button small { font-size: .66rem; }
+  .cards.ops .card { padding: 8px 2px; }
+  .cards.ops .card b { font-size: .8rem; }
+  .cards.ops .card small { display: none; }
+  /* Kitchen and café: keep the plate or glass pinned at the top while the options scroll under it */
+  #kitchenCreate .stage, #cafeCreate .stage { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; box-shadow: 0 10px 24px -18px rgba(30, 29, 27, .5); }
+  #kitchenCreate .stage-svg, #cafeCreate .stage-svg { height: min(34vh, 300px); }
+  #kitchenCreate .stage-top, #cafeCreate .stage-top { min-height: 0; padding-top: 8px; }
+  #kitchenCreate .stage-foot, #cafeCreate .stage-foot { min-height: 0; padding-bottom: 8px; }
+  #kitchenCreate .b2, #cafeCreate .stage .b2 { padding: 6px 12px; }
+  #kitchenCreate .stage .b2 small, #cafeCreate .stage .b2 small { display: none; }
+  .drink-name { font-size: 1.1rem; }
+  #kitchenCreate .stage .hint { display: none; }
   .climate { grid-template-columns: minmax(0, 1fr); }
 }
