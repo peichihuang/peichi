@@ -6,8 +6,10 @@ The earlier game, **Mushroom Patch** (grow rack, kitchen, café), is saved uncha
 
 ## Where we are
 
-- `samples/index.html`: four style samples of the same foraging scene (low-poly island, soft 3D cove, illustrated map, clay islands). Pick a direction before building the game.
+- `samples/index.html`: five style samples of the same foraging scene (low-poly island, soft 3D cove, illustrated map, clay islands, tiny café). Pick a direction before building the game.
 - **Direction D, clay islands** (added after Pei shared a soft-clay 3D artist as a mood reference): matte clay miniatures in warm light, mushrooms as little characters with faces, and a boat to sail between seasonal islands. The artist is a mood reference only; nothing of theirs is copied.
+- **Direction E, tiny café** (from Pei's "Tiny Garden" isometric room and needle-felted figure references): each map is a miniature isometric room or garden full of props, with felt-textured mushroom folk. The felt reference uses Sanrio and Nintendo characters, so only the wool texture idea is usable.
+- These samples are code sketches. The final look needs concept art and 3D models from an artist; the game code can load their models.
 
 ## The core loop
 

@@ -83,7 +83,7 @@ p { margin: 0; }
 <header class="top wrap"><b>MOSHRUUMS</b><i>Forage</i><span>Style samples</span></header>
 <main class="wrap">
   <section class="intro">
-    <h1>Four looks for the foraging game</h1>
+    <h1>Five looks for the foraging game</h1>
     <p class="muted" style="margin-top:8px">The same little garden in each of the styles you sent. Tap mushrooms to forage them. New ones spawn, some are rare, one is a holiday decor mushroom, and a few hide a recipe or a coupon. Drag to look around.</p>
   </section>
   <nav class="tabs" role="tablist" aria-label="Styles">
@@ -91,6 +91,7 @@ p { margin: 0; }
     <button role="tab" id="tab-toon" data-s="toon" aria-selected="false"><b>B · Soft 3D cove</b><small>like the cat fishing game</small></button>
     <button role="tab" id="tab-map" data-s="map" aria-selected="false"><b>C · Illustrated map</b><small>like the picture-book map</small></button>
     <button role="tab" id="tab-clay" data-s="clay" aria-selected="false"><b>D · Clay islands</b><small>soft 3D miniatures</small></button>
+    <button role="tab" id="tab-room" data-s="room" aria-selected="false"><b>E · Tiny café</b><small>isometric miniature room</small></button>
   </nav>
   <div class="grid">
     <div class="phone" id="phone" role="application" aria-label="Sample garden. Tap mushrooms to forage them.">
@@ -117,6 +118,7 @@ const HOLIDAY = {
   toon: { id: 'holiday', name: 'Jack-o’-Chestnut', tag: 'Holiday decor · Halloween' },
   map: { id: 'holiday', name: 'Lantern Shiitake', tag: 'Holiday decor · Lunar New Year' },
   clay: { id: 'holiday', name: 'Blossom Shiitake', tag: 'Holiday decor · Spring festival' },
+  room: { id: 'holiday', name: 'Cocoa Shiitake', tag: 'Holiday decor · Winter café' },
 };
 const FINDS = [
   { id: 'shiitake', name: 'Shiitake', tag: 'Common', w: 22, recipe: 'Shiitake Hot Pot' },
@@ -154,6 +156,13 @@ function found(kind) {
 
 /* ---------- Notes beside each sample ---------- */
 const NOTES = {
+  room: {
+    title: 'Tiny café', map: ['Moshruums Café', 'Room 1 of 4 · café'],
+    feel: 'Each map is a miniature room or garden cut open like a dollhouse, seen from above at an angle, packed with small details: your jars on the shelves, a counter, a mini grow rack, plants. Mushroom folk with a needle-felted wool look live in it, and mushrooms pop up in crates, pots and corners.',
+    effort: 4, wow: 5, brand: 5,
+    pros: ['Every room can be a real Moshruums place: the café, the grow room, the market stall, a forest corner', 'Rooms are a natural way to show products and hidden recipes', 'Felted mushroom folk feel handmade and collectible', 'Players love finding small details in rooms like this'],
+    cons: ['The detail is the whole charm, so it needs a 3D artist with lots of props; this code sketch only shows the layout', 'The felt look comes from real fiber textures and lighting an artist sets up', 'The felt reference uses Sanrio and Nintendo characters, so only the wool texture is usable, never those designs'],
+  },
   clay: {
     title: 'Clay islands', map: ['Mossy Meadow', 'Island 1 of 3 · spring'],
     feel: 'Soft, matte clay miniatures in warm light, like handmade toys on a table. You live on one island and sail to others; each island is a map with its own season, mushrooms and holiday decor. The mushrooms are little characters with faces.',
@@ -189,7 +198,7 @@ function renderNotes() {
   $('mapName').textContent = n.map[0];
   $('mapSub').textContent = n.map[1];
   $('notes').innerHTML = `
-    <div class="card"><p class="label">Direction ${({ lowpoly: 'A', toon: 'B', map: 'C', clay: 'D' })[current]}</p><h2>${n.title}</h2><p>${n.feel}</p>
+    <div class="card"><p class="label">Direction ${({ lowpoly: 'A', toon: 'B', map: 'C', clay: 'D', room: 'E' })[current]}</p><h2>${n.title}</h2><p>${n.feel}</p>
       <div class="rowm"><span class="muted">Cost to produce</span>${meter(n.effort)}</div>
       <div class="rowm"><span class="muted">Wow factor</span>${meter(n.wow)}</div>
       <div class="rowm"><span class="muted">Fits Moshruums</span>${meter(n.brand)}</div></div>
@@ -211,8 +220,9 @@ function make3D(build) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 300);
+  let camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 300);
   const api = build(scene, camera, renderer);
+  if (api.camera) camera = api.camera; // a scene may bring its own camera (the isometric room uses an orthographic one)
   const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
   let down = null, raf = 0, last = performance.now();
   const el = renderer.domElement;
@@ -240,7 +250,7 @@ function make3D(build) {
     raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);
-  const onResize = () => { const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; if (api.frame) api.frame(); camera.updateProjectionMatrix(); };
+  const onResize = () => { const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h); if (camera.isPerspectiveCamera) camera.aspect = w / h; if (api.frame) api.frame(w, h); camera.updateProjectionMatrix(); };
   window.addEventListener('resize', onResize);
   onResize();
   return { dispose() { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); renderer.dispose(); el.remove(); } };
@@ -800,6 +810,141 @@ function buildClay(scene, camera, renderer) {
   };
 }
 
+
+/* ---------- E: tiny café, an isometric miniature room ---------- */
+function buildRoom(scene, _persp, renderer) {
+  const host = $('phone');
+  host.style.background = 'linear-gradient(#9CC3EA, #CFE2F2)';
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  const R = rng(77);
+  const tex = (w, h, draw, rx = 1, ry = 1) => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 4; return t;
+  };
+  const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+  // fine fibers, so the mushroom folk read as needle-felted wool
+  const felt = tex(256, 256, (x, w, h) => { x.fillStyle = '#c8c8c8'; x.fillRect(0, 0, w, h); for (let i = 0; i < 5000; i++) { const a = Math.random() * Math.PI, l = 3 + Math.random() * 7, px = Math.random() * w, py = Math.random() * h, v = 150 + Math.random() * 105; x.strokeStyle = `rgb(${v},${v},${v})`; x.lineWidth = 0.7; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke(); } }, 2, 2);
+  felt.encoding = THREE.LinearEncoding;
+  const cache = {};
+  const M = (hex, rough = 0.85, opts = {}) => { const k = hex + '|' + rough + JSON.stringify(Object.keys(opts)); return cache[k] || (cache[k] = new THREE.MeshStandardMaterial(Object.assign({ color: lin(hex), roughness: rough, metalness: 0 }, opts))); };
+  const F = hex => cache['f' + hex] || (cache['f' + hex] = new THREE.MeshStandardMaterial({ color: lin(hex), roughness: 1, metalness: 0, bumpMap: felt, bumpScale: 0.04 }));
+  const T = t => new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 });
+  const box = (w, h, d, mat, x, y, z, cast = true) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = true; scene.add(m); return m; };
+  const cyl = (r1, r2, h, mat, x, y, z, seg = 24) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, seg), mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; };
+  const ball = (r, mat, x, y, z, sx = 1, sy = 1, sz = 1, parent = scene) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 18), mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = true; parent.add(m); return m; };
+  // textures
+  const wood = tex(512, 512, (x, w, h) => { for (let i = 0; i < 16; i++) { const v = 120 + R() * 40; x.fillStyle = `rgb(${v + 30},${v - 10},${v - 50})`; x.fillRect(0, i * 32, w, 32); x.fillStyle = 'rgba(60,30,10,.35)'; x.fillRect(0, i * 32, w, 2); const off = R() * w; x.fillRect(off, i * 32, 2, 32); for (let k = 0; k < 6; k++) { x.strokeStyle = 'rgba(80,40,15,.18)'; x.beginPath(); const yy = i * 32 + 4 + R() * 24; x.moveTo(0, yy); x.bezierCurveTo(w / 3, yy + 3, w * 2 / 3, yy - 3, w, yy); x.stroke(); } } }, 2, 2);
+  const paper = tex(256, 256, (x, w, h) => { x.fillStyle = '#E7DCC9'; x.fillRect(0, 0, w, h); for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const px = c * 64 + (r % 2) * 32 + 16, py = r * 64 + 22; x.fillStyle = '#C9B49A'; x.beginPath(); x.ellipse(px, py, 9, 6, 0, Math.PI, 0); x.fill(); x.fillRect(px - 2.5, py, 5, 8); x.fillStyle = '#D8A9A2'; x.beginPath(); x.arc(px + 30, py + 30, 2.4, 0, 7); x.fill(); } }, 3, 2);
+  const brick = tex(256, 64, (x, w, h) => { x.fillStyle = '#E6C3C8'; x.fillRect(0, 0, w, h); x.strokeStyle = '#F6E6E8'; x.lineWidth = 3; for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) x.strokeRect(c * 52 + (r % 2) * 26, r * 32, 52, 32); }, 4, 1);
+  const stone = tex(256, 64, (x, w, h) => { x.fillStyle = '#BDBDB4'; x.fillRect(0, 0, w, h); x.strokeStyle = '#E2E1DA'; x.lineWidth = 3; for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) x.strokeRect(c * 52 + (r % 2) * 26, r * 32, 52, 32); }, 5, 1);
+  const tile = tex(128, 128, (x, w, h) => { for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { x.fillStyle = (r + c) % 2 ? '#E9C9D4' : '#F6E9EE'; x.fillRect(c * 32, r * 32, 32, 32); } x.strokeStyle = '#fff'; x.lineWidth = 2; for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 32, 0); x.lineTo(i * 32, h); x.moveTo(0, i * 32); x.lineTo(w, i * 32); x.stroke(); } }, 3, 3);
+  const cloth = tex(128, 128, (x, w, h) => { x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(110,160,200,.55)'; for (let i = 0; i < 8; i++) { x.fillRect(i * 16, 0, 8, h); x.fillRect(0, i * 16, w, 8); } }, 2, 2);
+  const menu = tex(256, 192, (x, w, h) => { x.fillStyle = '#2E312B'; x.fillRect(0, 0, w, h); x.fillStyle = '#F1EEE9'; x.font = '700 22px "Josefin Sans", Futura, sans-serif'; x.textAlign = 'center'; x.fillText('MUSHROOM MENU', w / 2, 34); x.font = '15px "Hanken Grotesk", Arial, sans-serif'; x.textAlign = 'left'; ["Lion's Mane latte", 'Shiitake hot pot', 'Oyster tacos', 'Evening Glow tea', 'Maitake toast'].forEach((t, i) => { x.fillText(t, 22, 66 + i * 24); x.fillText('$' + (5 + i), 196, 66 + i * 24); }); }, 1, 1);
+  [wood, paper, brick, stone, tile, cloth, menu].forEach(t => { t.needsUpdate = true; });
+  // light
+  scene.add(new THREE.HemisphereLight(0xFFF4E4, 0x9C8468, 0.65));
+  const sun = new THREE.DirectionalLight(0xFFE6C4, 1.35); sun.position.set(14, 20, 10); sun.target.position.set(5, 0, 5);
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005; sun.shadow.radius = 3;
+  Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 50 });
+  scene.add(sun, sun.target);
+  const fill = new THREE.DirectionalLight(0xD6E4FF, 0.35); fill.position.set(-6, 8, 14); scene.add(fill);
+  // room shell: a slab, a wooden floor, two papered walls with brick trim
+  const slabMats = [T(stone), T(stone), M(0xCFCDC5), M(0xCFCDC5), T(stone), T(stone)];
+  box(11.2, 1.2, 11.2, slabMats, 5, -0.6, 5, false);
+  wood.repeat.set(2, 2); box(10.4, 0.14, 10.4, T(wood), 5, 0.07, 5, false);
+  const tl = box(4.4, 0.02, 3.2, T(tile), 2.6, 0.15, 1.9, false); tl.receiveShadow = true;
+  box(10.4, 6, 0.3, T(paper), 5, 3.14, -0.05, false);
+  box(0.3, 6, 10.4, T(paper), -0.05, 3.14, 5, false);
+  box(10.7, 0.5, 0.5, T(brick), 5, 6.3, -0.05); box(0.5, 0.5, 10.7, T(brick), -0.05, 6.3, 5);
+  // arched window on the left wall
+  const sky = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.4), new THREE.MeshBasicMaterial({ color: lin(0xA9D2F2) })); sky.position.set(0.12, 3.4, 7.2); sky.rotation.y = Math.PI / 2; scene.add(sky);
+  const arch = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.12, 10, 32, Math.PI), M(0x8FC3B2)); arch.position.set(0.16, 5.1, 7.2); arch.rotation.y = Math.PI / 2; scene.add(arch);
+  box(0.14, 3.4, 0.24, M(0x8FC3B2), 0.16, 3.4, 5.9); box(0.14, 3.4, 0.24, M(0x8FC3B2), 0.16, 3.4, 8.5); box(0.14, 0.24, 2.8, M(0x8FC3B2), 0.16, 1.7, 7.2); box(0.14, 3.4, 0.12, M(0x8FC3B2), 0.16, 3.4, 7.2);
+  box(0.5, 0.14, 3, M(0xB98A5E), 0.3, 1.6, 7.2);
+  // counter: an L of wooden slats with a rose top
+  const slats = tex(256, 128, (x, w, h) => { x.fillStyle = '#D9B47E'; x.fillRect(0, 0, w, h); x.strokeStyle = '#B88F58'; x.lineWidth = 3; for (let i = 0; i < w; i += 12) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, h); x.stroke(); } }, 3, 1);
+  box(5.4, 1.6, 1.3, T(slats), 2.9, 0.95, 0.85); box(5.6, 0.18, 1.5, M(0xD9706F, 0.6), 2.9, 1.84, 0.9);
+  box(1.3, 1.6, 2.6, T(slats), 4.95, 0.95, 2.8); box(1.5, 0.18, 2.8, M(0xD9706F, 0.6), 4.95, 1.84, 2.8);
+  // espresso machine, kettle, vase
+  box(0.9, 0.8, 0.6, M(0xF1EEE9, 0.4), 1.2, 2.33, 0.75); box(0.95, 0.12, 0.65, M(0x3A3A36, 0.4), 1.2, 2.78, 0.75); cyl(0.07, 0.07, 0.3, M(0x3A3A36), 1.05, 2.0, 1.1, 10); cyl(0.07, 0.07, 0.3, M(0x3A3A36), 1.35, 2.0, 1.1, 10);
+  ball(0.28, M(0xF6F1E6, 0.4), 2.4, 2.2, 0.8); cyl(0.04, 0.06, 0.35, M(0xF6F1E6, 0.4), 2.7, 2.25, 0.8, 10).rotation.z = -0.9;
+  cyl(0.12, 0.16, 0.4, M(0xF4EFE4, 0.5), 4.9, 2.13, 3.7); for (let i = 0; i < 9; i++) ball(0.11, F([0x9C7AC9, 0xB89BD9, 0x7E62B0][i % 3]), 4.9 + (R() - 0.5) * 0.35, 2.45 + R() * 0.3, 3.7 + (R() - 0.5) * 0.35);
+  // shelves with Moshruums jars and bags
+  const shelf = (x, y, w) => box(w, 0.12, 0.6, M(0xC9A06E), x, y, 0.32);
+  shelf(2.4, 3.6, 3.2); shelf(2.4, 4.7, 3.2);
+  [0xFAEC88, 0xCCCEF6, 0xEDBCC9, 0xFAEC88, 0xEDBCC9].forEach((lab, i) => { const x = 1.2 + i * 0.55; cyl(0.17, 0.17, 0.42, M(0x4A2A14, 0.35), x, 3.87, 0.32); cyl(0.175, 0.175, 0.2, M(lab), x, 3.86, 0.32); cyl(0.18, 0.18, 0.08, M(0x1A1A18, 0.5), x, 4.12, 0.32); });
+  [[1.3, 0xD9C3A0], [1.9, 0xCFB28C], [2.5, 0xD9C3A0]].forEach(([x, c]) => box(0.44, 0.6, 0.3, M(c), x, 5.06, 0.32));
+  [3.3, 3.75].forEach(x => { cyl(0.13, 0.11, 0.24, M(0xFFFFFF, 0.4), x, 4.88, 0.32); });
+  const board = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.4, 0.08), [M(0x8A6244), M(0x8A6244), M(0x8A6244), M(0x8A6244), new THREE.MeshStandardMaterial({ map: menu, roughness: 0.9 }), M(0x8A6244)]);
+  board.position.set(5.6, 4.4, 0.14); scene.add(board);
+  // a little grow rack with blocks (a nod to Mushroom Patch)
+  [0.9, 2.3].forEach(y => box(2.4, 0.08, 0.9, M(0x45452F, 0.5), 8.4, y, 0.6));
+  [[7.8, 0.9], [8.9, 0.9], [7.8, 2.3], [8.9, 2.3]].forEach(([x, y], i) => {
+    box(0.7, 0.55, 0.55, M(0xF5F0E4), x, y + 0.32, 0.6);
+    const col = [0x7088A8, 0xE891AA, 0xF2C14E, 0x8A5636][i];
+    for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), F(col)); c.scale.y = 0.6; c.position.set(x - 0.15 + k * 0.15, y + 0.65 + (k % 2) * 0.08, 0.75); c.castShadow = true; scene.add(c); }
+  });
+  [7.2, 9.6].forEach(x => box(0.08, 3, 0.08, M(0x45452F, 0.5), x, 1.6, 1.0));
+  // table, chairs, stools
+  cyl(0.85, 0.85, 0.08, new THREE.MeshStandardMaterial({ map: cloth, roughness: 0.95 }), 6.8, 1.45, 6.6, 32); cyl(0.06, 0.06, 1.4, M(0xB9B9B4, 0.4), 6.8, 0.72, 6.6, 10); cyl(0.4, 0.4, 0.05, M(0xB9B9B4, 0.4), 6.8, 0.17, 6.6);
+  cyl(0.18, 0.15, 0.12, M(0xFFFFFF, 0.4), 6.5, 1.55, 6.4, 16); cyl(0.2, 0.2, 0.04, M(0xFFFFFF, 0.4), 7.1, 1.5, 6.8, 16); ball(0.12, M(0xE8A0A8, 0.6), 7.1, 1.6, 6.8, 1, 0.6, 1);
+  const chair = (x, z, rot) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; scene.add(g); const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.14, 24), F(0x7FA6C6)); seat.position.y = 0.95; seat.castShadow = true; g.add(seat); const back = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.05, 8, 24, Math.PI), M(0xC9A06E)); back.position.set(0, 1.4, -0.3); back.castShadow = true; g.add(back); [[-0.28, -0.28], [0.28, -0.28], [-0.28, 0.28], [0.28, 0.28]].forEach(([a, b]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.9, 8), M(0xC9A06E)); l.position.set(a, 0.45, b); g.add(l); }); };
+  chair(6.8, 5.4, 0); chair(6.8, 7.8, Math.PI);
+  [[3.2, 4.3], [3.2, 2.9]].forEach(([x, z]) => { cyl(0.32, 0.32, 0.14, M(0xC9543A, 0.5), x, 1.35, z); cyl(0.04, 0.04, 1.25, M(0xD8D6CF, 0.4), x, 0.66, z, 8); });
+  // plants
+  const pot = (x, z, col, leafCol, big) => { cyl(big ? 0.45 : 0.3, big ? 0.35 : 0.24, big ? 0.8 : 0.5, M(col), x, big ? 0.55 : 0.4, z); for (let i = 0; i < (big ? 9 : 6); i++) { const a = i / (big ? 9 : 6) * Math.PI * 2; const l = ball(big ? 0.4 : 0.25, M(leafCol, 0.7), x + Math.cos(a) * (big ? 0.45 : 0.25), (big ? 1.3 : 0.85) + R() * 0.4, z + Math.sin(a) * (big ? 0.45 : 0.25), 1, 0.25, 0.6); l.rotation.y = -a; l.rotation.z = 0.6; } };
+  pot(1.0, 8.9, 0xD9785E, 0x4E8A3A, true); pot(2.2, 9.3, 0xF1EEE9, 0x6EA65A, false); pot(9.2, 9.0, 0xD9785E, 0x5C9A48, true); pot(9.3, 4.6, 0xF1EEE9, 0x7FB06A, false);
+  for (let i = 0; i < 14; i++) ball(0.1, M(i % 3 ? 0xE57A9A : 0x6EA65A, 0.7), 0.4, 5.6 - i * 0.22, 5.6 + Math.sin(i * 0.8) * 0.15);
+  for (let i = 0; i < 12; i++) ball(0.1, M(i % 4 ? 0x7FB06A : 0xF4C6D2, 0.7), 0.4, 5.6 - i * 0.22, 8.7 + Math.sin(i * 0.9) * 0.15);
+  // crates where mushrooms appear
+  const crate = (x, z) => { const g = box(1.0, 0.6, 0.8, M(0xB98A5E), x, 0.45, z); const rim = box(1.04, 0.08, 0.84, M(0x9A6E44), x, 0.76, z); return [g, rim]; };
+  crate(8.4, 3.2); crate(1.4, 4.6);
+  // mushroom folk in felt
+  function folk(capCol, x, z, rot, k = 1) {
+    const g = new THREE.Group(); g.position.set(x, 0.14, z); g.rotation.y = rot; g.scale.setScalar(k); scene.add(g);
+    ball(0.42, F(0xF4EBDB), 0, 0.62, 0, 1, 1.25, 1, g);
+    [-0.18, 0.18].forEach(sx => ball(0.12, F(0xEADDC6), sx, 0.1, 0.05, 1, 0.7, 1.2, g));
+    [-1, 1].forEach(sx => { const a = ball(0.1, F(0xF4EBDB), sx * 0.42, 0.62, 0.05, 1, 1.6, 1, g); a.rotation.z = sx * 0.4; });
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.62, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), F(capCol)); cap.scale.y = 0.7; cap.position.y = 1.02; cap.castShadow = true; g.add(cap);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.4; ball(0.07, F(0xFBF4E6), Math.cos(a) * 0.36, 1.33, Math.sin(a) * 0.36, 1, 0.5, 1, g); }
+    [-0.14, 0.14].forEach(sx => { ball(0.055, M(0x231E1A, 0.3), sx, 0.72, 0.39, 1, 1.2, 0.6, g); ball(0.018, M(0xFFFFFF, 0.2), sx + 0.02, 0.75, 0.42, 1, 1, 1, g); ball(0.08, F(0xF2A3AE), sx * 1.7, 0.6, 0.36, 1.2, 0.55, 0.4, g); });
+    return g;
+  }
+  const barista = folk(0x8A5636, 2.2, -0.0 + 0.2, 0.2); barista.position.set(2.0, 0.14, 1.9); barista.rotation.y = Math.PI * 0.05 + Math.PI; barista.rotation.y = 0.15;
+  const guest = folk(0xE891AA, 6.8, 7.8, Math.PI, 0.9); guest.position.y = 0.55;
+  const walker = folk(0x7088A8, 4.2, 7.6, -0.6, 0.85);
+  // things to forage: small felted mushrooms with faces
+  function small(kind) {
+    const g = new THREE.Group();
+    const capCol = { shiitake: 0x8A5636, blue: 0x7088A8, enoki: 0xF2E9D2, pink: 0xE891AA, lions: 0xF4EBD8, golden: 0xF2C14E, holiday: 0x6B4A36 }[kind];
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.34, 18), F(0xF4EBDB)); st.position.y = 0.17; st.castShadow = true; g.add(st);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(kind === 'enoki' ? 0.18 : 0.3, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), F(capCol)); cap.scale.y = 0.72; cap.position.y = 0.32; cap.castShadow = true; g.add(cap);
+    if (kind === 'golden') { cap.material = new THREE.MeshStandardMaterial({ color: lin(0xF2C14E), emissive: lin(0x6A4A00), roughness: 0.5 }); g.add(sparkles(0xFFE9A0)); }
+    if (kind === 'holiday') { const c = ball(0.22, F(0xFFFFFF), 0, 0.5, 0, 1, 0.45, 1, g); for (let i = 0; i < 3; i++) ball(0.05, F(0xF2C9A8), (i - 1) * 0.08, 0.6, 0.05, 1, 1, 1, g); void c; }
+    [-0.07, 0.07].forEach(sx => ball(0.025, M(0x231E1A, 0.3), sx, 0.22, 0.14, 1, 1.2, 0.6, g));
+    return g;
+  }
+  const spots = [[8.2, 0.82, 3.1, 1.1], [8.6, 0.82, 3.3, 1.1], [1.3, 0.82, 4.5, 1.1], [1.6, 0.82, 4.8, 1.1], [3.8, 0.14, 8.8, 1.3], [5.2, 0.14, 9.3, 1.3], [8.2, 0.14, 8.4, 1.3], [9.5, 0.14, 6.2, 1.3], [5.6, 0.14, 5.0, 1.3], [2.6, 0.14, 6.6, 1.3], [0.9, 0.14, 2.8, 1.2], [9.4, 1.9, 2.2, 1.0], [0.35, 1.72, 6.6, 1.0]];
+  const sp = spawner(scene, spots, small, 7);
+  // isometric camera
+  const cam = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
+  let spin = 0;
+  const place = () => { const r = 26, a = Math.PI / 4 + spin; cam.position.set(5 + Math.sin(a) * r, 22, 5 + Math.cos(a) * r); cam.lookAt(5, 2.2, 5); };
+  return {
+    camera: cam,
+    frame(w, h) { const aspect = (w || host.clientWidth) / (h || host.clientHeight), half = aspect < 1 ? 8.6 / aspect * 0.62 : 8.2; cam.left = -half * aspect; cam.right = half * aspect; cam.top = half; cam.bottom = -half; place(); },
+    pickables: () => sp.list,
+    pick: m => sp.pick(m),
+    drag: dx => { spin = Math.max(-0.6, Math.min(0.6, spin - dx * 0.006)); place(); },
+    tick(dt, t) {
+      if (!reduceMotion) { walker.position.x = 4.2 + Math.sin(t * 0.5) * 1.4; walker.rotation.y = Math.cos(t * 0.5) > 0 ? Math.PI / 2 : -Math.PI / 2; walker.position.y = 0.14 + Math.abs(Math.sin(t * 5)) * 0.06; barista.rotation.y = 0.15 + Math.sin(t * 0.7) * 0.3; }
+      sp.list.forEach(m => { const s = m.children.find(o => o.isPoints); if (s) s.rotation.y += dt; });
+    },
+  };
+}
+
 /* ---------- Tabs ---------- */
 function show(which) {
   current = which;
@@ -815,13 +960,13 @@ function show(which) {
     $('phone').insertAdjacentHTML('afterbegin', '<div class="fallback"><p>The 3D samples need a library that did not load here. Try reloading the page.</p></div>');
     return;
   }
-  try { scene3 = make3D(which === 'toon' ? buildToon : which === 'clay' ? buildClay : buildLowpoly); }
+  try { scene3 = make3D(({ toon: buildToon, clay: buildClay, room: buildRoom })[which] || buildLowpoly); }
   catch (e) { console.error('3D view failed to start', e); $('phone').insertAdjacentHTML('afterbegin', '<div class="fallback"><p>This device could not start the 3D view.</p></div>'); }
 }
 document.querySelectorAll('.tabs [data-s]').forEach(b => b.addEventListener('click', () => { show(b.dataset.s); try { history.replaceState(null, '', '#' + b.dataset.s); } catch (e) { /* sandboxed */ } }));
-window.addEventListener('hashchange', () => { const h = (location.hash || '').slice(1); if (['lowpoly', 'toon', 'map', 'clay'].includes(h) && h !== current) show(h); });
+window.addEventListener('hashchange', () => { const h = (location.hash || '').slice(1); if (['lowpoly', 'toon', 'map', 'clay', 'room'].includes(h) && h !== current) show(h); });
 const start = (location.hash || '').slice(1);
-show(['lowpoly', 'toon', 'map', 'clay'].includes(start) ? start : 'lowpoly');
+show(['lowpoly', 'toon', 'map', 'clay', 'room'].includes(start) ? start : 'lowpoly');
 })();
 </script>
 </body>
