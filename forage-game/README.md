@@ -6,7 +6,8 @@ The earlier game, **Mushroom Patch** (grow rack, kitchen, café), is saved uncha
 
 ## Where we are
 
-- `samples/index.html`: three style samples of the same foraging scene (low-poly island, soft 3D cove, illustrated map). Pick a direction before building the game.
+- `samples/index.html`: four style samples of the same foraging scene (low-poly island, soft 3D cove, illustrated map, clay islands). Pick a direction before building the game.
+- **Direction D, clay islands** (added after Pei shared a soft-clay 3D artist as a mood reference): matte clay miniatures in warm light, mushrooms as little characters with faces, and a boat to sail between seasonal islands. The artist is a mood reference only; nothing of theirs is copied.
 
 ## The core loop
 

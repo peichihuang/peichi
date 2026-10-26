@@ -63,6 +63,13 @@ p { margin: 0; }
 .meter i { width: 22px; height: 6px; border-radius: 3px; background: var(--line); }
 .meter i.on { background: var(--olive); }
 .rowm { display: grid; grid-template-columns: 9rem 1fr; gap: 10px; align-items: center; font-size: .9rem; }
+.travel { position: absolute; left: 12px; right: 12px; bottom: 14px; display: flex; gap: 6px; justify-content: center; }
+.travel button { flex: 1; max-width: 132px; background: rgba(251, 250, 247, .9); border-radius: 999px; padding: 7px 8px; font-size: .76rem; line-height: 1.15; display: grid; justify-items: center; box-shadow: 0 6px 16px -10px rgba(0, 0, 0, .5); }
+.travel button small { font-size: .62rem; color: var(--ink-2); }
+.travel button[aria-pressed="true"] { background: var(--olive); color: var(--page); }
+.travel button[aria-pressed="true"] small { color: var(--sage); }
+.phone.has-travel .toast { bottom: 64px; }
+.phone.has-travel .hint { bottom: 64px; }
 .fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; background: var(--panel); }
 @media (max-width: 820px) {
   .grid { grid-template-columns: minmax(0, 1fr); }
@@ -76,19 +83,21 @@ p { margin: 0; }
 <header class="top wrap"><b>MOSHRUUMS</b><i>Forage</i><span>Style samples</span></header>
 <main class="wrap">
   <section class="intro">
-    <h1>Three looks for the foraging game</h1>
-    <p class="muted" style="margin-top:8px">The same little garden in each of the three styles you sent. Tap mushrooms to forage them. New ones spawn, some are rare, one is a holiday decor mushroom, and a few hide a recipe or a coupon. Drag to look around.</p>
+    <h1>Four looks for the foraging game</h1>
+    <p class="muted" style="margin-top:8px">The same little garden in each of the styles you sent. Tap mushrooms to forage them. New ones spawn, some are rare, one is a holiday decor mushroom, and a few hide a recipe or a coupon. Drag to look around.</p>
   </section>
   <nav class="tabs" role="tablist" aria-label="Styles">
     <button role="tab" id="tab-lowpoly" data-s="lowpoly" aria-selected="true"><b>A · Low-poly island</b><small>like My Oasis</small></button>
     <button role="tab" id="tab-toon" data-s="toon" aria-selected="false"><b>B · Soft 3D cove</b><small>like the cat fishing game</small></button>
     <button role="tab" id="tab-map" data-s="map" aria-selected="false"><b>C · Illustrated map</b><small>like the picture-book map</small></button>
+    <button role="tab" id="tab-clay" data-s="clay" aria-selected="false"><b>D · Clay islands</b><small>soft 3D miniatures</small></button>
   </nav>
   <div class="grid">
     <div class="phone" id="phone" role="application" aria-label="Sample garden. Tap mushrooms to forage them.">
       <div class="hud"><span class="chip"><b id="mapName">Spring Meadow</b><small id="mapSub">Map 1 of 6</small></span><span class="chip" style="text-align:right"><b id="basket">Basket 0</b><small id="rares">0 rare finds</small></span></div>
       <div class="toast off" id="toast" aria-live="polite"></div>
       <div class="hint" id="hint">Tap a mushroom to forage it</div>
+      <div class="travel" id="travel" hidden></div>
     </div>
     <div class="notes" id="notes"></div>
   </div>
@@ -107,6 +116,7 @@ const HOLIDAY = {
   lowpoly: { id: 'holiday', name: 'Santa Shiitake', tag: 'Holiday decor · Christmas' },
   toon: { id: 'holiday', name: 'Jack-o’-Chestnut', tag: 'Holiday decor · Halloween' },
   map: { id: 'holiday', name: 'Lantern Shiitake', tag: 'Holiday decor · Lunar New Year' },
+  clay: { id: 'holiday', name: 'Blossom Shiitake', tag: 'Holiday decor · Spring festival' },
 };
 const FINDS = [
   { id: 'shiitake', name: 'Shiitake', tag: 'Common', w: 22, recipe: 'Shiitake Hot Pot' },
@@ -144,6 +154,13 @@ function found(kind) {
 
 /* ---------- Notes beside each sample ---------- */
 const NOTES = {
+  clay: {
+    title: 'Clay islands', map: ['Mossy Meadow', 'Island 1 of 3 · spring'],
+    feel: 'Soft, matte clay miniatures in warm light, like handmade toys on a table. You live on one island and sail to others; each island is a map with its own season, mushrooms and holiday decor. The mushrooms are little characters with faces.',
+    effort: 4, wow: 5, brand: 4,
+    pros: ['Very warm and collectible: every mushroom feels like a tiny vinyl toy people want to own', 'Islands make "maps" natural: sail to a new island for each season or event', 'Characters give the collection personality, and decor variants (hats, crowns) are easy to stack on one body'],
+    cons: ['Needs a 3D artist for the final look; this sample is a sketch in code', 'More work than the flat map, though simpler than full character animation', 'Warm miniature lighting needs care to stay readable on small phones'],
+  },
   lowpoly: {
     title: 'Low-poly island', map: ['Spring Meadow', 'Map 1 of 6'],
     feel: 'Bright, playful and easy to read on a small screen. Faceted shapes, soft sky, cherry blossoms. Each map is a floating island you spin around.',
@@ -172,7 +189,7 @@ function renderNotes() {
   $('mapName').textContent = n.map[0];
   $('mapSub').textContent = n.map[1];
   $('notes').innerHTML = `
-    <div class="card"><p class="label">Direction ${current === 'lowpoly' ? 'A' : current === 'toon' ? 'B' : 'C'}</p><h2>${n.title}</h2><p>${n.feel}</p>
+    <div class="card"><p class="label">Direction ${({ lowpoly: 'A', toon: 'B', map: 'C', clay: 'D' })[current]}</p><h2>${n.title}</h2><p>${n.feel}</p>
       <div class="rowm"><span class="muted">Cost to produce</span>${meter(n.effort)}</div>
       <div class="rowm"><span class="muted">Wow factor</span>${meter(n.wow)}</div>
       <div class="rowm"><span class="muted">Fits Moshruums</span>${meter(n.brand)}</div></div>
@@ -571,6 +588,218 @@ function buildMap() {
   return { dispose() { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); svg.remove(); } };
 }
 
+
+/* ---------- D: clay islands ---------- */
+function buildClay(scene, camera, renderer) {
+  const host = $('phone');
+  host.style.background = 'linear-gradient(#F7E6CC, #EED8B6 55%, #D7C3A2)';
+  host.classList.add('has-travel');
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  const R = rng(31);
+  // fine grain so surfaces read as clay, not plastic
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const cx = cv.getContext('2d'), img = cx.createImageData(128, 128);
+  for (let i = 0; i < img.data.length; i += 4) { const v = 190 + Math.random() * 65; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  cx.putImageData(img, 0, 0);
+  const grain = new THREE.CanvasTexture(cv); grain.wrapS = grain.wrapT = THREE.RepeatWrapping; grain.repeat.set(4, 4);
+  const cache = {};
+  const C = (hex, rough = 0.9, glow = 0) => {
+    const k = hex + '|' + rough + '|' + glow;
+    if (!cache[k]) {
+      cache[k] = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), roughness: rough, metalness: 0, bumpMap: grain, bumpScale: 0.012 });
+      if (glow) cache[k].emissive = new THREE.Color(glow).convertSRGBToLinear();
+    }
+    return cache[k];
+  };
+  const mesh = (geo, mat, cast = true, recv = false) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = recv; return m; };
+  const place = (m, x, y, z) => { m.position.set(x, y, z); return m; };
+  const S = (r, w = 28, h = 20) => new THREE.SphereGeometry(r, w, h);
+  const HALF = (r, w = 32) => new THREE.SphereGeometry(r, w, 14, 0, Math.PI * 2, 0, Math.PI / 2);
+  scene.fog = new THREE.Fog(new THREE.Color(0xEAD8BC).convertSRGBToLinear(), 46, 110);
+  scene.add(new THREE.HemisphereLight(0xFFF1DC, 0x8C7A62, 0.6));
+  const sun = new THREE.DirectionalLight(0xFFE2BC, 1.3);
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.radius = 4;
+  Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 70 });
+  scene.add(sun, sun.target);
+  const fill = new THREE.DirectionalLight(0xCBD9FF, 0.25); fill.position.set(12, 6, -10); scene.add(fill);
+  const sea = mesh(new THREE.CircleGeometry(140, 64), C(0x9CC7C1, 0.55), false, true); sea.rotation.x = -Math.PI / 2; sea.position.y = -0.7; scene.add(sea);
+  // a thick, softly rounded disc
+  const disc = (r, h, round) => {
+    const pts = [new THREE.Vector2(0.001, -h / 2)];
+    for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + i / 8 * Math.PI / 2; pts.push(new THREE.Vector2(r - round + Math.cos(a) * round, -h / 2 + round + Math.sin(a) * round)); }
+    for (let i = 0; i <= 8; i++) { const a = i / 8 * Math.PI / 2; pts.push(new THREE.Vector2(r - round + Math.cos(a) * round, h / 2 - round + Math.sin(a) * round)); }
+    pts.push(new THREE.Vector2(0.001, h / 2));
+    return new THREE.LatheGeometry(pts, 56);
+  };
+  const tree = (g, x, z, col, k = 1) => {
+    g.add(place(mesh(new THREE.CylinderGeometry(0.16 * k, 0.24 * k, 1.4 * k, 14), C(0x8A6244)), x, 1.8 + 0.7 * k, z));
+    [[0, 2.1, 0, 0.95], [0.5, 1.75, 0.2, 0.7], [-0.45, 1.8, -0.15, 0.68]].forEach(([dx, dy, dz, r]) => g.add(place(mesh(S(r * k), C(col)), x + dx * k, 1.8 + dy * k, z + dz * k)));
+  };
+  const pine = (g, x, z, snow, k = 1) => {
+    for (let i = 0; i < 3; i++) {
+      const c = mesh(new THREE.ConeGeometry((0.95 - i * 0.24) * k, 1.1 * k, 24), C(0x4E7D57)); c.position.set(x, 1.8 + (0.6 + i * 0.62) * k, z); g.add(c);
+      if (snow) { const cap = mesh(new THREE.ConeGeometry((0.5 - i * 0.12) * k, 0.45 * k, 24), C(0xFBF8F2)); cap.position.set(x, 1.8 + (0.92 + i * 0.62) * k, z); g.add(cap); }
+    }
+  };
+  const house = (g, x, z, capCol, rot) => {
+    const h = new THREE.Group(); h.position.set(x, 1.8, z); h.rotation.y = rot; g.add(h);
+    h.add(place(mesh(new THREE.CylinderGeometry(0.95, 1.05, 1.7, 32), C(0xF3E6CF)), 0, 0.85, 0));
+    const roof = mesh(HALF(1.7), C(capCol)); roof.scale.y = 0.72; roof.position.y = 1.65; h.add(roof);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, d = mesh(S(0.17, 16, 12), C(0xFFF7EA)); d.scale.y = 0.45; d.position.set(Math.cos(a) * 1.1, 2.55, Math.sin(a) * 1.1); h.add(d); }
+    const door = mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 24, 1, false, 0, Math.PI), C(0x8A5A3A)); door.rotation.set(0, Math.PI / 2, Math.PI / 2); door.position.set(0, 0.42, 1.0); h.add(door);
+    const win = mesh(S(0.2, 20, 14), C(0xFFE3A3, 0.6, 0xC98A2A)); win.scale.z = 0.3; win.position.set(0.45, 1.15, 0.92); h.add(win);
+  };
+  const sign = text => {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 72;
+    const x = c.getContext('2d'); x.fillStyle = '#57573D'; x.fillRect(0, 0, 256, 72); x.fillStyle = '#F1EEE9'; x.font = '700 34px "Josefin Sans", Futura, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 128, 40);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.9 });
+  };
+  const stall = (g, x, z, rot) => {
+    const st = new THREE.Group(); st.position.set(x, 1.8, z); st.rotation.y = rot; g.add(st);
+    st.add(place(mesh(new THREE.BoxGeometry(2.2, 0.9, 0.9), C(0xB9875A)), 0, 0.45, 0));
+    [0xFAEC88, 0xCCCEF6, 0xEDBCC9].forEach((col, i) => {
+      const j = new THREE.Group(); j.position.set(-0.6 + i * 0.6, 0.9, 0.1); st.add(j);
+      j.add(place(mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.42, 20), C(0x4A2A14, 0.5)), 0, 0.21, 0));
+      j.add(place(mesh(new THREE.CylinderGeometry(0.175, 0.175, 0.2, 20), C(col)), 0, 0.2, 0));
+      j.add(place(mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 20), C(0x1A1A18, 0.6)), 0, 0.46, 0));
+    });
+    [-1, 1].forEach(sx => st.add(place(mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 10), C(0x8A6244)), sx * 1.0, 1.25, -0.3)));
+    const board = mesh(new THREE.BoxGeometry(1.9, 0.5, 0.06), [C(0x57573D), C(0x57573D), C(0x57573D), C(0x57573D), sign('MOSHRUUMS'), C(0x57573D)]);
+    board.position.set(0, 2.0, -0.3); st.add(board);
+  };
+  const pumpkin = (g, x, z, k = 1) => { const p = mesh(S(0.42 * k), C(0xE8822E)); p.scale.y = 0.75; p.position.set(x, 1.8 + 0.3 * k, z); g.add(p); g.add(place(mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.2, 8), C(0x5E7A3A)), x, 1.8 + 0.66 * k, z)); };
+  const snowman = (g, x, z) => {
+    [[0.55, 0.5], [0.4, 1.25], [0.28, 1.8]].forEach(([r, y]) => g.add(place(mesh(S(r), C(0xFBF8F2)), x, 1.8 + y, z)));
+    const nose = mesh(new THREE.ConeGeometry(0.06, 0.3, 12), C(0xE8822E)); nose.rotation.x = Math.PI / 2; nose.position.set(x, 3.6, z + 0.38); g.add(nose);
+    const scarf = mesh(new THREE.TorusGeometry(0.3, 0.08, 10, 24), C(0xB44F6E)); scarf.rotation.x = Math.PI / 2; scarf.position.set(x, 3.38, z); g.add(scarf);
+  };
+  const gift = (g, x, z, col) => { const b = mesh(new THREE.BoxGeometry(0.5, 0.45, 0.5), C(col)); b.position.set(x, 2.03, z); g.add(b); const rb = mesh(new THREE.BoxGeometry(0.52, 0.47, 0.1), C(0xF7E3A1)); rb.position.copy(b.position); g.add(rb); };
+  const dock = (g, a) => { for (let i = 0; i < 4; i++) { const p = mesh(new THREE.BoxGeometry(0.8, 0.14, 2.2), C(0xA97A52)); p.position.set(Math.cos(a) * (9.6 + i * 0.05), 0.15, Math.sin(a) * 9.6 + (i - 1.5) * 0.85 * 0); p.rotation.y = -a; p.position.x += Math.cos(a) * i * 0.8; p.position.z += Math.sin(a) * i * 0.8; g.add(p); } };
+  const ISLANDS = [
+    { name: 'Mossy Meadow', sub: 'Island 1 of 3 · spring', x: 0, z: 0, grass: 0x9DBE6A, soil: 0xC48E5E, holiday: { name: 'Blossom Shiitake', tag: 'Holiday decor · Spring festival', deco: 'flowers', cap: 0xF2A7BE } },
+    { name: 'Maple Grove', sub: 'Island 2 of 3 · autumn', x: 34, z: -10, grass: 0xD8A65E, soil: 0xA8714A, holiday: { name: 'Jack-o’-Chestnut', tag: 'Holiday decor · Halloween', deco: 'witch', cap: 0xE8822E } },
+    { name: 'Snow Hollow', sub: 'Island 3 of 3 · winter', x: -32, z: -12, grass: 0xF5F2EC, soil: 0xB58A64, holiday: { name: 'Santa Shiitake', tag: 'Holiday decor · Christmas', deco: 'santa', cap: 0xD8463B } },
+  ];
+  ISLANDS.forEach((isl, idx) => {
+    const g = new THREE.Group(); g.position.set(isl.x, 0, isl.z); scene.add(g); isl.group = g;
+    const base = mesh(disc(9, 3, 1.1), C(isl.soil), true, true); base.position.y = 0; g.add(base);
+    const top = mesh(disc(9.25, 1.0, 0.5), C(isl.grass), true, true); top.position.y = 1.35; g.add(top);
+    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + R(), r = mesh(S(0.5 + R() * 0.5, 18, 14), C(0xB7AFA3)); r.scale.y = 0.6; r.position.set(Math.cos(a) * 9.4, -0.4, Math.sin(a) * 9.4); g.add(r); }
+    if (idx === 0) {
+      house(g, -3.6, -3.2, 0xD8584A, 0.5); stall(g, 3.4, -3.4, -0.4);
+      [[-6, 1], [-5.4, 4.4], [6, 2], [5.2, 5], [-1, -6.4], [2, -6.6], [-6.8, -2.4]].forEach(([x, z], i) => tree(g, x, z, [0x8DB35E, 0xA9C86E, 0xF2B9C6][i % 3], 0.85 + R() * 0.3));
+      for (let i = 0; i < 26; i++) { const f = mesh(S(0.1, 10, 8), C([0xF2A7BE, 0xF7E08A, 0xFFFFFF][i % 3])); const a = R() * 6.28, d = 2 + R() * 6; f.position.set(Math.cos(a) * d, 1.86, Math.sin(a) * d); g.add(f); }
+    } else if (idx === 1) {
+      house(g, -3.2, -3.6, 0x8A5636, 0.3);
+      [[-6, 1.5], [5.8, 2.4], [5, -3.6], [-5.6, 4.8], [0.5, -6.6], [6.5, 5.2]].forEach(([x, z], i) => tree(g, x, z, [0xE07A3A, 0xE9A23A, 0xC9543A][i % 3], 0.85 + R() * 0.3));
+      [[2.6, -2.4, 1.2], [3.4, -1.8, 0.8], [-1.6, 4.6, 1], [1.2, 5.4, 0.7]].forEach(([x, z, k]) => pumpkin(g, x, z, k));
+      const hay = mesh(new THREE.CylinderGeometry(0.8, 0.8, 1, 24), C(0xE9C66E)); hay.rotation.z = Math.PI / 2; hay.position.set(-4.6, 2.3, 2.6); g.add(hay);
+    } else {
+      house(g, 3.4, -3.4, 0x6F86A3, -0.5); snowman(g, -2.6, -3.6);
+      [[-6, 1], [-5.6, 4.6], [6, 2.4], [5.4, 5.4], [-1.4, -6.6], [1.6, -6.8], [-6.6, -2.6]].forEach(([x, z]) => pine(g, x, z, true, 0.9 + R() * 0.4));
+      [[0.8, -4.6, 0xD8463B], [1.5, -4.0, 0x5E8A4C], [0.2, -3.9, 0xF2C14E]].forEach(([x, z, c]) => gift(g, x, z, c));
+    }
+    dock(g, Math.PI / 2);
+    isl.spots = [];
+    for (let i = 0; i < 30; i++) { const a = R() * Math.PI * 2, d = 1.4 + R() * 5.6, x = Math.cos(a) * d, z = Math.sin(a) * d; if (z > -2.2 || Math.abs(x) < 1.8) isl.spots.push([x, 1.82, z, 1.25]); }
+    isl.sp = spawner(g, isl.spots, kind => clayMush(kind, isl), 6);
+  });
+  // forageable mushroom characters
+  function clayMush(kind, isl) {
+    const g = new THREE.Group();
+    const capCol = { shiitake: 0x8A5636, blue: 0x7088A8, enoki: 0xF2E9D2, pink: 0xE891AA, lions: 0xF4EBD8, golden: 0xF2C14E, holiday: isl.holiday.cap }[kind];
+    const tall = kind === 'enoki';
+    const body = mesh(S(0.36), C(0xF6EBDA)); body.scale.set(1, tall ? 1.7 : 1.15, 1); body.position.y = tall ? 0.6 : 0.42; g.add(body);
+    [-0.15, 0.15].forEach(x => g.add(place(mesh(S(0.1, 12, 10), C(0xEADCC4)), x, 0.06, 0.06)));
+    const capY = tall ? 1.2 : 0.7;
+    if (kind === 'lions') {
+      for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, b = mesh(S(0.17, 14, 10), C(capCol)); b.position.set(Math.cos(a) * 0.36, capY + 0.08 + (i % 2) * 0.08, Math.sin(a) * 0.36); g.add(b); }
+      g.add(place(mesh(S(0.36), C(capCol)), 0, capY + 0.2, 0));
+    } else {
+      const cap = mesh(HALF(tall ? 0.3 : 0.56), C(capCol, kind === 'golden' ? 0.4 : 0.85, kind === 'golden' ? 0x6A4A00 : 0)); cap.scale.y = 0.72; cap.position.y = capY; g.add(cap);
+      if (kind === 'shiitake' || (kind === 'holiday' && isl.holiday.deco === 'santa')) {
+        for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.4, d = mesh(S(0.06, 10, 8), C(0xFBF3E4)); d.scale.y = 0.5; d.position.set(Math.cos(a) * 0.3, capY + 0.28, Math.sin(a) * 0.3); g.add(d); }
+      }
+    }
+    // face
+    const fz = 0.34, fy = tall ? 0.72 : 0.46;
+    [-0.13, 0.13].forEach(x => {
+      g.add(place(mesh(S(0.05, 14, 12), C(0x2A2420, 0.4), false), x, fy, fz));
+      g.add(place(mesh(S(0.016, 8, 6), C(0xFFFFFF, 0.3), false), x + 0.018, fy + 0.02, fz + 0.045));
+      const bl = mesh(S(0.07, 14, 10), C(0xF2A3AE), false); bl.scale.set(1.2, 0.55, 0.4); bl.position.set(x * 1.75, fy - 0.1, fz - 0.03); g.add(bl);
+    });
+    const smile = mesh(new THREE.TorusGeometry(0.045, 0.012, 6, 16, Math.PI), C(0x2A2420, 0.4), false); smile.rotation.z = Math.PI; smile.position.set(0, fy - 0.08, fz + 0.03); g.add(smile);
+    // decor
+    const deco = kind === 'holiday' ? isl.holiday.deco : null;
+    if (deco === 'santa') {
+      const brim = mesh(new THREE.TorusGeometry(0.24, 0.07, 12, 28), C(0xFFFFFF)); brim.rotation.x = Math.PI / 2; brim.position.y = capY + 0.36; g.add(brim);
+      const cone = mesh(new THREE.ConeGeometry(0.24, 0.5, 24), C(0xC9362E)); cone.position.set(0.05, capY + 0.62, 0); cone.rotation.z = -0.35; g.add(cone);
+      g.add(place(mesh(S(0.08, 12, 10), C(0xFFFFFF)), 0.22, capY + 0.84, 0));
+    } else if (deco === 'witch') {
+      g.add(place(mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.04, 28), C(0x3A2A4A)), 0, capY + 0.38, 0));
+      const cone = mesh(new THREE.ConeGeometry(0.2, 0.5, 24), C(0x3A2A4A)); cone.position.set(0, capY + 0.64, 0); cone.rotation.z = 0.25; g.add(cone);
+    } else if (deco === 'flowers') {
+      for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2, f = mesh(S(0.08, 12, 10), C([0xFFFFFF, 0xF7E08A, 0xF5B9C9][i % 3])); f.position.set(Math.cos(a) * 0.36, capY + 0.28, Math.sin(a) * 0.36); g.add(f); }
+    }
+    if (kind === 'golden') g.add(sparkles(0xFFE9A0));
+    return g;
+  }
+  // the boat that carries you between islands
+  const boat = new THREE.Group(); boat.scale.setScalar(0.72); scene.add(boat);
+  const hull = mesh(new THREE.SphereGeometry(1.1, 36, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), C(0xA06A44)); hull.scale.set(1.6, 0.6, 0.8); boat.add(hull);
+  const rim = mesh(new THREE.TorusGeometry(1.1, 0.08, 12, 40), C(0xC08A5E)); rim.rotation.x = Math.PI / 2; rim.scale.set(1.6, 0.8, 1); boat.add(rim);
+  const rider = clayMush('shiitake', ISLANDS[0]); rider.position.set(0, -0.1, 0); rider.scale.setScalar(1.4); boat.add(rider);
+  const flag = mesh(new THREE.BoxGeometry(0.02, 0.5, 0.36), C(0xFAEC88)); flag.position.set(-1.2, 1.2, 0.15); boat.add(flag);
+  boat.add(place(mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.4, 8), C(0x8A6244)), -1.2, 0.7, 0));
+  const dockPoint = isl => new THREE.Vector3(isl.x + 3.2, -0.15, isl.z + 11.2);
+  boat.position.copy(dockPoint(ISLANDS[0]));
+  // travel bar
+  const bar = $('travel');
+  bar.hidden = false;
+  bar.innerHTML = ISLANDS.map((isl, i) => `<button data-i="${i}" aria-pressed="${i === 0}">${isl.name}<small>${isl.sub.split('· ')[1]}</small></button>`).join('');
+  let at = 0, travel = null, angle = 0;
+  const focus = new THREE.Vector3(0, 1.6, 0);
+  const setIsland = i => {
+    at = i; const isl = ISLANDS[i];
+    $('mapName').textContent = isl.name; $('mapSub').textContent = isl.sub;
+    HOLIDAY.clay = { id: 'holiday', name: isl.holiday.name, tag: isl.holiday.tag };
+    bar.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
+  };
+  setIsland(0);
+  bar.querySelectorAll('button').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i; if (i === at || travel) return;
+    const from = ISLANDS[at], to = ISLANDS[i];
+    travel = { t: 0, dur: reduceMotion ? 0.01 : 2.6, from: new THREE.Vector3(from.x, 1.6, from.z), to: new THREE.Vector3(to.x, 1.6, to.z), b0: dockPoint(from), b1: dockPoint(to), i };
+    $('hint').style.opacity = 0;
+    $('toast').classList.add('off');
+  });
+  return {
+    frame() { const portrait = camera.aspect < 1; camera.fov = portrait ? 46 : 36; },
+    pickables: () => ISLANDS[at].sp.list,
+    pick: m => ISLANDS[at].sp.pick(m),
+    drag: dx => { angle -= dx * 0.008; },
+    tick(dt, t) {
+      if (travel) {
+        travel.t += dt / travel.dur;
+        const k = Math.min(1, travel.t), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        focus.lerpVectors(travel.from, travel.to, e);
+        boat.position.lerpVectors(travel.b0, travel.b1, e);
+        boat.rotation.y = Math.atan2(travel.b1.x - travel.b0.x, travel.b1.z - travel.b0.z) - Math.PI / 2;
+        if (k >= 1) { setIsland(travel.i); travel = null; boat.rotation.y = 0; }
+      }
+      const portrait = camera.aspect < 1, dist = portrait ? 27 : 21, hgt = portrait ? 17 : 12;
+      camera.position.set(focus.x + Math.sin(angle) * dist, hgt, focus.z + Math.cos(angle) * dist);
+      camera.lookAt(focus.x, focus.y - (portrait ? 1.2 : 0.4), focus.z);
+      sun.position.set(focus.x - 12, 22, focus.z + 14); sun.target.position.copy(focus);
+      if (!reduceMotion) { boat.position.y = -0.15 + Math.sin(t * 1.5) * 0.08; rider.rotation.y = Math.sin(t * 0.8) * 0.3; }
+      ISLANDS.forEach(isl => isl.sp.list.forEach(m => { const sp = m.children.find(o => o.isPoints); if (sp) sp.rotation.y += dt; if (!reduceMotion) m.rotation.y += Math.sin(t * 2 + m.position.x) * 0.002; }));
+    },
+  };
+}
+
 /* ---------- Tabs ---------- */
 function show(which) {
   current = which;
@@ -579,19 +808,20 @@ function show(which) {
   const fb = $('phone').querySelector('.fallback'); if (fb) fb.remove();
   $('hint').style.opacity = 1;
   $('toast').classList.add('off');
+  $('travel').hidden = true; $('phone').classList.remove('has-travel');
   renderNotes();
   if (which === 'map') { scene3 = buildMap(); return; }
   if (!has3D()) {
     $('phone').insertAdjacentHTML('afterbegin', '<div class="fallback"><p>The 3D samples need a library that did not load here. Try reloading the page.</p></div>');
     return;
   }
-  try { scene3 = make3D(which === 'toon' ? buildToon : buildLowpoly); }
-  catch (e) { $('phone').insertAdjacentHTML('afterbegin', '<div class="fallback"><p>This device could not start the 3D view.</p></div>'); }
+  try { scene3 = make3D(which === 'toon' ? buildToon : which === 'clay' ? buildClay : buildLowpoly); }
+  catch (e) { console.error('3D view failed to start', e); $('phone').insertAdjacentHTML('afterbegin', '<div class="fallback"><p>This device could not start the 3D view.</p></div>'); }
 }
 document.querySelectorAll('.tabs [data-s]').forEach(b => b.addEventListener('click', () => { show(b.dataset.s); try { history.replaceState(null, '', '#' + b.dataset.s); } catch (e) { /* sandboxed */ } }));
-window.addEventListener('hashchange', () => { const h = (location.hash || '').slice(1); if (['lowpoly', 'toon', 'map'].includes(h) && h !== current) show(h); });
+window.addEventListener('hashchange', () => { const h = (location.hash || '').slice(1); if (['lowpoly', 'toon', 'map', 'clay'].includes(h) && h !== current) show(h); });
 const start = (location.hash || '').slice(1);
-show(['lowpoly', 'toon', 'map'].includes(start) ? start : 'lowpoly');
+show(['lowpoly', 'toon', 'map', 'clay'].includes(start) ? start : 'lowpoly');
 })();
 </script>
 </body>
